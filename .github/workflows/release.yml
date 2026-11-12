@@ -28,11 +28,29 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Cache Electron binaries
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: electron-cache-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build NSIS installer
-        run: npm run dist
+        shell: pwsh
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          npm run dist 2>&1 | Tee-Object -FilePath build.log
+          if ($LASTEXITCODE -ne 0) {
+            $tail = (Get-Content build.log -Tail 12) -join ' | '
+            $tail = $tail -replace '%', '%25' -replace "`r", '' -replace "`n", '%0A'
+            Write-Host "::error::$tail"
+            exit 1
+          }
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
