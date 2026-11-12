@@ -52,10 +52,21 @@ git push -u origin main
 
 ### 2. Включите GitHub Pages
 
+Это единственный шаг, который нужно сделать вручную: встроенный токен GitHub
+Actions не имеет прав создать Pages-сайт сам (ошибка
+`Resource not accessible by integration` на шаге **Configure Pages**).
+
 1. Откройте репозиторий на GitHub.
 2. **Settings → Pages**.
 3. В блоке **Build and deployment → Source** выберите **GitHub Actions**.
 4. Ничего больше выбирать не нужно — workflow уже лежит в репозитории.
+
+Этот шаг нельзя пропустить: включить Pages за вас workflow не может.
+У `GITHUB_TOKEN` нет прав администратора репозитория, поэтому
+`configure-pages` с `enablement: true` падает с ошибкой
+`Resource not accessible by integration`. Если нужен полностью
+автоматический первый деплой, добавьте секрет `PAGES_PAT` — classic PAT
+со scope `repo` (см. `.github/workflows/pages.yml`).
 
 ### 3. Запустите деплой
 
@@ -63,7 +74,7 @@ git push -u origin main
 Run workflow**. Через 1–2 минуты сайт будет доступен по адресу:
 
 ```text
-https://ВАШ_ЛОГИН.github.io/НАЗВАНИЕ_РЕПОЗИТОРИЯ/
+https://hazik8.github.io/YLaYncher/
 ```
 
 Точный адрес показывается в логе шага **Deploy to GitHub Pages**.
@@ -168,6 +179,8 @@ Cloudflare Pages тоже бесплатен, работает на CDN и не 
 | Нет релизов | В репозитории нет опубликованных Releases или к ним не прикреплён `.exe`. Черновики сайт не показывает. |
 | Кнопка «Скачать» ведёт на GitHub | У релиза нет подходящего файла установщика. Прикрепите `.exe` к релизу. |
 | Pages не деплоится | **Settings → Pages → Source** должен быть **GitHub Actions**. Проверьте лог workflow. |
+| `Configure Pages: Resource not accessible by integration` | Pages ещё не включены. Включите их в **Settings → Pages → Source = GitHub Actions** и запустите workflow заново. |
+| `Resource not accessible by integration` в шаге **Configure Pages** | Pages ещё не включены, а `GITHUB_TOKEN` не имеет прав на создание сайта. Включите Pages вручную (**Settings → Pages → Source: GitHub Actions**) или добавьте секрет `PAGES_PAT` (classic PAT, scope `repo`). |
 | GitHub API отвечает 403 | Сработал лимит запросов. Сайт продолжит работать на `releases.json`; подождите час или запустите деплой заново. |
 | Windows SmartScreen | Установщик не подписан платным сертификатом. Это ожидаемо: «Подробнее» → «Выполнить в любом случае». |
 
