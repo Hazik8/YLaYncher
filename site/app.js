@@ -181,9 +181,13 @@
 
   function primaryAsset(release) {
     if (!release || !release.assets.length) return null;
+    const windows = release.assets.filter((asset) => asset.platform === 'windows');
+    const notArm = (asset) => !/arm64|aarch64/i.test(asset.name);
     return (
-      release.assets.find((asset) => asset.platform === 'windows' && /setup|install/i.test(asset.name)) ||
-      release.assets.find((asset) => asset.platform === 'windows') ||
+      windows.find((asset) => /setup|install/i.test(asset.name) && notArm(asset)) ||
+      windows.find(notArm) ||
+      windows.find((asset) => /setup|install/i.test(asset.name)) ||
+      windows[0] ||
       release.assets[0]
     );
   }

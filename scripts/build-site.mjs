@@ -105,7 +105,7 @@ async function fetchReleases() {
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const url = `https://api.github.com/repos/${repo}/releases?per_page=100`;
+  const url = `https://api.github.com/repos/${repo}/releases?per_page=30`;
   console.log(`[site] Загружаю релизы: ${repo}`);
 
   try {
