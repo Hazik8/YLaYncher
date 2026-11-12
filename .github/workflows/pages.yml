@@ -49,8 +49,14 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
-          # Включает GitHub Pages автоматически, если они ещё не включены.
-          enablement: true
+          # GITHUB_TOKEN не может создать сайт Pages: GitHub разрешает
+          # автоматическое включение только для PAT или GitHub App.
+          # Поэтому Pages нужно один раз включить вручную:
+          # Settings → Pages → Build and deployment → Source: GitHub Actions.
+          # Если добавить секрет PAGES_PAT (PAT с правом Pages: write),
+          # workflow включит Pages сам.
+          token: ${{ secrets.PAGES_PAT || github.token }}
+          enablement: ${{ secrets.PAGES_PAT != '' }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
