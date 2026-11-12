@@ -1,0 +1,45 @@
+{
+  "name": "y-layncher",
+  "version": "1.0.0",
+  "description": "Y LaYncher — быстрый и красивый лаунчер Minecraft",
+  "main": "src/main/main.js",
+  "author": "Y LaYncher",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "icon": "python tools/make-icon.py",
+    "dist": "electron-builder --win nsis",
+    "site:build": "node scripts/build-site.mjs",
+    "site": "node scripts/build-site.mjs && node scripts/preview-site.mjs"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "ru.ylayncher.app",
+    "productName": "Y LaYncher",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Y LaYncher"
+    }
+  },
+  "dependencies": {
+    "adm-zip": "^0.6.1"
+  }
+}

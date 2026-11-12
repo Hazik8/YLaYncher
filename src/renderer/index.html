@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; connect-src 'none';"
+  />
+  <title>Y LaYncher</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <svg class="svg-sprite" aria-hidden="true">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.7 12 3l9 7.7"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></symbol>
+    <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 2.8 8 4.6v9.2l-8 4.6-8-4.6V7.4l8-4.6Z"/><path d="m4 7.4 8 4.6 8-4.6M12 12v9.2"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06-2.87 2.87-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21h-4v-.08a1.7 1.7 0 0 0-1.1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06-2.87-2.87.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1H3v-4h.08a1.7 1.7 0 0 0 1.56-1.1 1.7 1.7 0 0 0-.34-1.87L4.24 7 7.1 4.13l.06.06A1.7 1.7 0 0 0 9 4.53a1.7 1.7 0 0 0 1-1.56V3h4v.08a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06L19.87 7l-.06.06A1.7 1.7 0 0 0 19.47 9a1.7 1.7 0 0 0 1.56 1H21v4h-.08a1.7 1.7 0 0 0-1.52 1Z"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="2.8" y="4" width="18.4" height="16" rx="3"/><path d="m7 9 3 3-3 3M12.5 15H17"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.8a1 1 0 0 1 1.52-.85l11.1 6.6a1 1 0 0 1 0 1.71L8.52 19.9A1 1 0 0 1 7 19.05Z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5"/><path d="M4 19.5h16"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l.8 13h9.4l.8-13M10 11v5M14 11v5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2h6.5A2.5 2.5 0 0 1 21 9.5V18a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18Z"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 6v5h-5"/><path d="M4 18v-5h5"/><path d="M18.3 9A7 7 0 0 0 6.1 6.6L4 11m16 2-2.1 4.4A7 7 0 0 1 5.7 15"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/><path d="M9.5 9.5h5v5h-5zM9.5 2.5v3.5M14.5 2.5v3.5M9.5 18v3.5M14.5 18v3.5M2.5 9.5H6M2.5 14.5H6M18 9.5h3.5M18 14.5h3.5"/></symbol>
+    <symbol id="i-java" viewBox="0 0 24 24"><path d="M8 18.5c-2 1.2-2 2 1.5 2.2 3.2.2 5.5-.2 5.5-1.4 0-.7-.7-1.1-1.8-1.4"/><path d="M10 14.6c-1.5 1.1-1.6 1.9.3 2.2 2 .3 4.2.1 4.2-.9 0-.5-.5-.9-1.3-1.2"/><path d="M13.5 2.5c2.5 3-6 5-4 8.2.9 1.4 2.3 2.2 2.3 3.5 0 1-.7 1.8-2 2.3"/><path d="M15.5 10.5c2.3 2.1-3.7 3.4-4.4 5.6"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2.5"/><path d="M9 21h6M12 17v4"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-warning" viewBox="0 0 24 24"><path d="M10.3 4.5a2 2 0 0 1 3.4 0l7.3 12.7a2 2 0 0 1-1.7 3H4.7a2 2 0 0 1-1.7-3Z"/><path d="M12 9v4.5M12 17h.01"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5v-3a2 2 0 0 0-2-2H5.5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18.5 14.5V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5h4.5"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3.5 13.8 9l5.5 1.8-5.5 1.8L12 18l-1.8-5.4L4.7 10.8 10.2 9Z"/><path d="M19 16.5v3.2M17.4 18.1h3.2"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m0 0-5.5-5.5M19 12l-5.5 5.5"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></symbol>
+    <symbol id="i-sleep" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 16 0 8 8 0 0 0-16 0Z"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4Z"/><path d="M8 4v5h8V4M8 20v-6h8v6"/></symbol>
+    <symbol id="i-mod" viewBox="0 0 24 24"><path d="m12 2 8 4v5c0 5.2-3.4 9.4-8 11-4.6-1.6-8-5.8-8-11V6Z"/><path d="M9 12h6M12 9v6"/></symbol>
+  </svg>
+
+  <div class="ambient" aria-hidden="true">
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+    <span class="grain"></span>
+  </div>
+
+  <div class="app">
+    <header class="titlebar">
+      <div class="titlebar-brand">
+        <span class="logo-mark">Y</span>
+        <span class="logo-word">Y <em>LaYncher</em></span>
+        <span class="logo-ver">v1.0</span>
+      </div>
+      <div class="titlebar-drag"></div>
+      <button class="titlebar-btn" id="console-toggle" title="Консоль">
+        <svg><use href="#i-terminal"/></svg>
+      </button>
+      <div class="window-controls">
+        <button class="win-btn" id="win-minimize" title="Свернуть"><span class="win-min"></span></button>
+        <button class="win-btn" id="win-maximize" title="Развернуть"><span class="win-max"></span></button>
+        <button class="win-btn danger" id="win-close" title="Закрыть"><svg><use href="#i-close"/></svg></button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <button class="account-card" id="account-card">
+          <span class="avatar-wrap">
+            <img id="sidebar-avatar" alt="" />
+            <span class="avatar-fallback" id="sidebar-initials">?</span>
+            <span class="status-dot"></span>
+          </span>
+          <span class="account-meta">
+            <strong id="sidebar-name">Добавить аккаунт</strong>
+            <small id="sidebar-type">Офлайн-режим</small>
+          </span>
+          <svg class="account-chevron"><use href="#i-chevron"/></svg>
+        </button>
+
+        <nav class="nav" aria-label="Разделы">
+          <button class="nav-item active" data-page="home">
+            <svg><use href="#i-home"/></svg><span>Главная</span>
+          </button>
+          <button class="nav-item" data-page="versions">
+            <svg><use href="#i-cube"/></svg><span>Версии</span>
+            <span class="nav-badge" id="nav-installed">0</span>
+          </button>
+          <button class="nav-item" data-page="settings">
+            <svg><use href="#i-gear"/></svg><span>Настройки</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-spacer"></div>
+
+        <div class="sys-card">
+          <div class="sys-row">
+            <span class="sys-icon"><svg><use href="#i-java"/></svg></span>
+            <span class="sys-meta"><small>Java</small><strong id="sys-java">Проверка…</strong></span>
+          </div>
+          <div class="sys-row">
+            <span class="sys-icon"><svg><use href="#i-chip"/></svg></span>
+            <span class="sys-meta"><small>Память</small><strong id="sys-ram">—</strong></span>
+          </div>
+          <div class="sys-row">
+            <span class="sys-icon"><svg><use href="#i-globe"/></svg></span>
+            <span class="sys-meta"><small>Сервисы Mojang</small><strong id="sys-network">Проверка</strong></span>
+          </div>
+        </div>
+
+        <button class="sidebar-console" id="sidebar-console">
+          <svg><use href="#i-terminal"/></svg>
+          <span>Открыть консоль</span>
+        </button>
+      </aside>
+
+      <main class="content" id="content">
+        <!-- ================= HOME ================= -->
+        <section class="page active" data-page="home">
+          <div class="page-head home-head">
+            <div>
+              <p class="eyebrow"><span class="live-dot"></span> Готов к игре</p>
+              <h1 class="page-title">С возвращением, <span id="hello-name">игрок</span></h1>
+            </div>
+            <div class="head-actions">
+              <button class="icon-btn" id="refresh-all" title="Обновить данные">
+                <svg><use href="#i-refresh"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="home-grid">
+            <section class="hero">
+              <div class="hero-glow"></div>
+              <div class="hero-grid"></div>
+              <div class="hero-content">
+                <div class="hero-topline">
+                  <span class="tag tag-lime"><span class="live-dot"></span> Minecraft Java Edition</span>
+                  <span class="tag" id="hero-type">Release</span>
+                </div>
+                <h2>Новое приключение<br />начинается <span class="grad-text">здесь</span>.</h2>
+                <p class="hero-sub">Выберите версию — и вперёд. Установка, Java и библиотеки уже под контролем.</p>
+
+                <div class="hero-controls">
+                  <div class="version-picker" id="version-picker">
+                    <button class="picker-btn" id="picker-btn" aria-haspopup="listbox">
+                      <span class="picker-cube">
+                        <svg><use href="#i-cube"/></svg>
+                      </span>
+                      <span class="picker-meta">
+                        <strong id="picker-version">Загрузка…</strong>
+                        <small id="picker-sub">Список версий</small>
+                      </span>
+                      <svg class="picker-chevron"><use href="#i-chevron"/></svg>
+                    </button>
+                    <div class="picker-menu" id="picker-menu" hidden>
+                      <div class="picker-search">
+                        <svg><use href="#i-search"/></svg>
+                        <input id="picker-search" type="text" placeholder="Поиск версии…" autocomplete="off" />
+                      </div>
+                      <div class="picker-list" id="picker-list"></div>
+                      <button class="picker-all" id="picker-all">Все версии <svg><use href="#i-arrow"/></svg></button>
+                    </div>
+                  </div>
+
+                  <button class="btn btn-play" id="play-btn">
+                    <span class="btn-spinner"></span>
+                    <svg class="btn-play-icon"><use href="#i-play"/></svg>
+                    <span id="play-label">Играть</span>
+                  </button>
+                  <button class="btn btn-stop" id="stop-btn" hidden>
+                    <svg><use href="#i-stop"/></svg> Остановить
+                  </button>
+                </div>
+
+                <div class="install-progress" id="hero-progress" hidden>
+                  <div class="progress-head">
+                    <span><span class="pulse-dot"></span> <span id="hero-progress-stage">Подготовка…</span></span>
+                    <span id="hero-progress-percent">0%</span>
+                  </div>
+                  <div class="progress-track"><div class="progress-fill" id="hero-progress-fill"></div></div>
+                  <div class="progress-sub">
+                    <span id="hero-progress-meta"></span>
+                    <button class="link-btn" id="cancel-install">Отменить</button>
+                  </div>
+                </div>
+
+                <div class="hero-chips">
+                  <span class="chip"><svg><use href="#i-user"/></svg><span id="chip-account">нет аккаунта</span></span>
+                  <span class="chip"><svg><use href="#i-java"/></svg><span id="chip-java">Java: авто</span></span>
+                  <span class="chip"><svg><use href="#i-chip"/></svg><span id="chip-ram">4 ГБ</span></span>
+                  <span class="chip"><svg><use href="#i-mod"/></svg><span id="chip-mods">0 модов</span></span>
+                </div>
+              </div>
+
+              <div class="hero-art" aria-hidden="true">
+                <div class="scene">
+                  <div class="block block-diamond">
+                    <span class="face top"></span><span class="face left"></span><span class="face right"></span>
+                  </div>
+                  <div class="block block-grass">
+                    <span class="face top"></span><span class="face left"></span><span class="face right"></span>
+                  </div>
+                  <span class="float-chip chip-1">1.21.8</span>
+                  <span class="float-chip chip-2">Fabric</span>
+                  <span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span>
+                </div>
+              </div>
+            </section>
+
+            <aside class="home-side">
+              <div class="stat-card">
+                <div class="stat-icon lime"><svg><use href="#i-sleep"/></svg></div>
+                <span class="stat-label">Всего в игре</span>
+                <strong class="stat-value" id="stat-playtime">0 ч</strong>
+                <span class="stat-note" id="stat-last-played">Ещё не играли</span>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon violet"><svg><use href="#i-cube"/></svg></div>
+                <span class="stat-label">Установлено</span>
+                <strong class="stat-value" id="stat-installed">0 <small>версий</small></strong>
+                <span class="stat-note" id="stat-selected">—</span>
+              </div>
+              <button class="quick-card" data-action="open-mods">
+                <span class="quick-icon"><svg><use href="#i-folder"/></svg></span>
+                <span class="quick-text"><strong>Папка mods</strong><small>Моды и ресурспаки</small></span>
+                <svg class="quick-arrow"><use href="#i-arrow"/></svg>
+              </button>
+              <button class="quick-card" data-action="open-mods-menu">
+                <span class="quick-icon"><svg><use href="#i-mod"/></svg></span>
+                <span class="quick-text"><strong>Меню модов</strong><small>Forge и Modrinth</small></span>
+                <svg class="quick-arrow"><use href="#i-arrow"/></svg>
+              </button>
+            </aside>
+          </div>
+
+          <section class="section news-section">
+            <div class="section-head">
+              <div>
+                <h3>Новости Minecraft</h3>
+                <p>Свежие материалы с официального сайта</p>
+              </div>
+              <button class="link-btn" id="news-refresh"><svg><use href="#i-refresh"/></svg> Обновить</button>
+            </div>
+            <div class="news-grid" id="news-grid"></div>
+          </section>
+        </section>
+
+        <!-- ================= VERSIONS ================= -->
+        <section class="page" data-page="versions">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow"><span class="live-dot violet"></span> Библиотека</p>
+              <h1 class="page-title">Версии игры</h1>
+              <p class="page-sub">Релизы, снапшоты и сборки Fabric, Forge и OptiFine — в одном месте.</p>
+            </div>
+            <button class="btn btn-primary" id="open-fabric">
+              <svg><use href="#i-plus"/></svg> Установить модлоадер
+            </button>
+            <button class="btn btn-ghost" id="open-mods">
+              <svg><use href="#i-mod"/></svg> Меню модов
+            </button>
+          </div>
+
+          <div class="toolbar">
+            <label class="search-box">
+              <svg><use href="#i-search"/></svg>
+              <input id="version-search" type="text" placeholder="Найти версию, например 1.21.8" autocomplete="off" />
+            </label>
+            <div class="segmented" id="version-filter">
+              <button class="active" data-filter="all">Все</button>
+              <button data-filter="release">Релизы</button>
+              <button data-filter="snapshot">Снапшоты</button>
+              <button data-filter="installed">Установленные</button>
+            </div>
+            <button class="icon-btn" id="versions-refresh" title="Обновить список">
+              <svg><use href="#i-refresh"/></svg>
+            </button>
+          </div>
+
+          <div class="inline-progress" id="versions-progress" hidden>
+            <div class="progress-head">
+              <span><span class="pulse-dot"></span> <span id="versions-progress-stage">Установка…</span></span>
+              <span id="versions-progress-percent">0%</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" id="versions-progress-fill"></div></div>
+          </div>
+
+          <section class="section" id="installed-section">
+            <div class="section-head">
+              <div>
+                <h3>Установленные</h3>
+                <p>Готовы к запуску прямо сейчас</p>
+              </div>
+              <span class="count-pill" id="installed-count">0</span>
+            </div>
+            <div class="installed-grid" id="installed-grid"></div>
+          </section>
+
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <h3>Все версии</h3>
+                <p id="versions-hint">Загрузка списка Mojang…</p>
+              </div>
+              <span class="count-pill" id="versions-count">—</span>
+            </div>
+            <div class="version-list" id="versions-list"></div>
+            <div class="list-footer">
+              <button class="btn btn-ghost" id="load-more" hidden>Показать ещё</button>
+            </div>
+          </section>
+        </section>
+
+        <!-- ================= SETTINGS ================= -->
+        <section class="page" data-page="settings">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow"><span class="live-dot violet"></span> Персонализация</p>
+              <h1 class="page-title">Настройки</h1>
+              <p class="page-sub">Всё сохраняется автоматически — никаких кнопок «Применить».</p>
+            </div>
+            <span class="autosave"><svg><use href="#i-check"/></svg> Автосохранение</span>
+          </div>
+
+          <div class="settings-grid">
+            <section class="settings-card span-2">
+              <div class="card-head">
+                <h3><svg><use href="#i-user"/></svg> Аккаунт</h3>
+                <button class="btn btn-ghost btn-sm" id="settings-account-btn">Управление</button>
+              </div>
+              <div class="account-row">
+                <span class="avatar-wrap large">
+                  <img id="settings-avatar" alt="" />
+                  <span class="avatar-fallback" id="settings-initials">?</span>
+                </span>
+                <div class="account-row-meta">
+                  <strong id="settings-account-name">Аккаунт не добавлен</strong>
+                  <small id="settings-account-uuid">Офлайн-аккаунт · добавьте ник для игры</small>
+                </div>
+                <span class="tag tag-lime" id="settings-account-badge">Offline</span>
+              </div>
+              <p class="hint" id="settings-account-hint">Офлайн-аккаунт подходит для одиночной игры и серверов без проверки лицензии. Ник можно сменить в любой момент.</p>
+            </section>
+
+            <section class="settings-card">
+              <div class="card-head">
+                <h3><svg><use href="#i-chip"/></svg> Производительность</h3>
+                <output class="range-output" id="mem-output">4 ГБ</output>
+              </div>
+              <label class="field-label" for="mem-range">Оперативная память для игры</label>
+              <input type="range" id="mem-range" min="1024" max="32768" step="512" />
+              <div class="range-scale"><span>1 ГБ</span><span>32 ГБ</span></div>
+              <p class="hint">Рекомендуем 4–8 ГБ. Больше — не всегда быстрее: Java не любит избыток памяти.</p>
+            </section>
+
+            <section class="settings-card">
+              <div class="card-head">
+                <h3><svg><use href="#i-java"/></svg> Java</h3>
+                <span class="tag" id="java-badge">Не проверена</span>
+              </div>
+              <label class="field-label" for="java-select">Исполняемый файл</label>
+              <select id="java-select">
+                <option value="">Автоматически (рекомендуется)</option>
+              </select>
+              <div class="row-gap">
+                <button class="btn btn-ghost btn-sm" id="java-detect"><svg><use href="#i-refresh"/></svg> Найти Java</button>
+                <button class="btn btn-ghost btn-sm" id="java-browse"><svg><use href="#i-folder"/></svg> Указать вручную</button>
+              </div>
+              <p class="hint">Если подходящая Java не найдена, лаунчер скачает официальную сборку Mojang при запуске.</p>
+            </section>
+
+            <section class="settings-card">
+              <div class="card-head">
+                <h3><svg><use href="#i-monitor"/></svg> Окно игры</h3>
+              </div>
+              <div class="two-cols">
+                <div class="field">
+                  <label class="field-label" for="width-input">Ширина</label>
+                  <input type="number" id="width-input" min="640" max="7680" step="1" />
+                </div>
+                <div class="field">
+                  <label class="field-label" for="height-input">Высота</label>
+                  <input type="number" id="height-input" min="480" max="4320" step="1" />
+                </div>
+              </div>
+              <div class="preset-row" id="resolution-presets">
+                <button data-res="1280x720">1280×720</button>
+                <button data-res="1600x900">1600×900</button>
+                <button data-res="1920x1080">1920×1080</button>
+              </div>
+              <label class="switch-row">
+                <span><strong>Полный экран</strong><small>Запускать игру на весь экран</small></span>
+                <input type="checkbox" id="fullscreen-toggle" />
+                <span class="switch"></span>
+              </label>
+            </section>
+
+            <section class="settings-card">
+              <div class="card-head">
+                <h3><svg><use href="#i-terminal"/></svg> Поведение лаунчера</h3>
+              </div>
+              <label class="switch-row">
+                <span><strong>Скрывать лаунчер</strong><small>Сворачивать окно после запуска игры</small></span>
+                <input type="checkbox" id="close-launch-toggle" />
+                <span class="switch"></span>
+              </label>
+              <label class="switch-row">
+                <span><strong>Показывать консоль</strong><small>Открывать лог при запуске</small></span>
+                <input type="checkbox" id="console-setting-toggle" />
+                <span class="switch"></span>
+              </label>
+              <div class="field">
+                <label class="field-label" for="jvm-args">Дополнительные аргументы JVM</label>
+                <input type="text" id="jvm-args" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
+              </div>
+            </section>
+
+            <section class="settings-card">
+              <div class="card-head">
+                <h3><svg><use href="#i-folder"/></svg> Папка игры</h3>
+              </div>
+              <div class="path-row">
+                <code id="game-dir-path">…</code>
+                <button class="btn btn-ghost btn-sm" id="browse-game-dir">Изменить</button>
+              </div>
+              <div class="row-gap">
+                <button class="btn btn-ghost btn-sm" data-action="open-game"><svg><use href="#i-folder"/></svg> .minecraft</button>
+                <button class="btn btn-ghost btn-sm" data-action="open-mods"><svg><use href="#i-mod"/></svg> mods</button>
+                <button class="btn btn-ghost btn-sm" data-action="open-saves"><svg><use href="#i-save"/></svg> saves</button>
+              </div>
+              <p class="hint">Здесь хранятся миры, моды и ресурспаки. Можно указать существующую папку.</p>
+            </section>
+
+            <section class="settings-card span-2 about-card">
+              <div class="about-left">
+                <span class="logo-mark large">Y</span>
+                <div>
+                  <strong>Y LaYncher <span class="tag" id="about-version">v1.0</span></strong>
+                  <small>Неофициальный лаунчер для Minecraft Java Edition. Не связан с Mojang Studios или Microsoft.</small>
+                </div>
+              </div>
+              <div class="row-gap">
+                <button class="btn btn-ghost btn-sm" data-action="open-site">Minecraft.net <svg><use href="#i-external"/></svg></button>
+                <button class="btn btn-ghost btn-sm" data-action="open-eula">EULA</button>
+                <button class="btn btn-ghost btn-sm" data-action="open-data">Данные лаунчера</button>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <section class="console-dock" id="console-dock" hidden>
+      <div class="console-head">
+        <div class="console-title">
+          <span class="console-dot"></span>
+          <strong>Консоль</strong>
+          <span id="console-status">готова</span>
+        </div>
+        <div class="console-actions">
+          <button class="link-btn" id="console-copy"><svg><use href="#i-copy"/></svg> Копировать</button>
+          <button class="link-btn" id="console-clear"><svg><use href="#i-trash"/></svg> Очистить</button>
+          <button class="window-close-sm" id="console-close"><svg><use href="#i-close"/></svg></button>
+        </div>
+      </div>
+      <div class="console-body" id="console-body"></div>
+    </section>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

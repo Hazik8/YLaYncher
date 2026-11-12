@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Y LaYncher — лаунчер Minecraft Java Edition</title>
+  <meta name="description" content="Y LaYncher — красивый и быстрый лаунчер Minecraft: Java Edition. Любые версии, Fabric, Forge, OptiFine, вход через Microsoft и автоматическая Java. Бесплатно для Windows." />
+  <meta name="theme-color" content="#06070b" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Y LaYncher — лаунчер Minecraft Java Edition" />
+  <meta property="og:description" content="Любые версии Minecraft, Fabric, Forge и OptiFine. Вход через Microsoft, автоматическая Java и тёмный стеклянный интерфейс." />
+  <meta property="og:image" content="assets/icon.png" />
+  <link rel="icon" type="image/png" href="assets/icon.png" />
+  <link rel="apple-touch-icon" href="assets/icon.png" />
+  <link rel="preload" href="assets/fonts/manrope-cyr.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/unbounded-cyr.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Перейти к содержимому</a>
+
+  <noscript>
+    <div class="noscript-banner">
+      Для отображения релизов нужен JavaScript. Список файлов всегда доступен на
+      <a href="https://github.com/" data-repo-link>GitHub Releases</a>.
+    </div>
+  </noscript>
+
+  <div class="ambient" aria-hidden="true">
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+    <span class="grid-lines"></span>
+    <span class="noise"></span>
+  </div>
+
+  <svg class="svg-sprite" aria-hidden="true">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.7 12 3l9 7.7"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></symbol>
+    <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 2.8 8 4.6v9.2l-8 4.6-8-4.6V7.4l8-4.6Z"/><path d="m4 7.4 8 4.6 8-4.6M12 12v9.2"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06-2.87 2.87-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21h-4v-.08a1.7 1.7 0 0 0-1.1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06-2.87-2.87.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1H3v-4h.08a1.7 1.7 0 0 0 1.56-1.1 1.7 1.7 0 0 0-.34-1.87L4.24 7 7.1 4.13l.06.06A1.7 1.7 0 0 0 9 4.53a1.7 1.7 0 0 0 1-1.56V3h4v.08a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06L19.87 7l-.06.06A1.7 1.7 0 0 0 19.47 9a1.7 1.7 0 0 0 1.56 1H21v4h-.08a1.7 1.7 0 0 0-1.52 1Z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5"/><path d="M4 19.5h16"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m0 0-5.5-5.5M19 12l-5.5 5.5"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18.5 14.5V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5h4.5"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.39-5.25 5.67.41.35.78 1.05.78 2.12 0 1.53-.01 2.76-.01 3.14 0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-java" viewBox="0 0 24 24"><path d="M8 18.5c-2 1.2-2 2 1.5 2.2 3.2.2 5.5-.2 5.5-1.4 0-.7-.7-1.1-1.8-1.4"/><path d="M10 14.6c-1.5 1.1-1.6 1.9.3 2.2 2 .3 4.2.1 4.2-.9 0-.5-.5-.9-1.3-1.2"/><path d="M13.5 2.5c2.5 3-6 5-4 8.2.9 1.4 2.3 2.2 2.3 3.5 0 1-.7 1.8-2 2.3"/><path d="M15.5 10.5c2.3 2.1-3.7 3.4-4.4 5.6"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/><path d="M9.5 9.5h5v5h-5zM9.5 2.5v3.5M14.5 2.5v3.5M9.5 18v3.5M14.5 18v3.5M2.5 9.5H6M2.5 14.5H6M18 9.5h3.5M18 14.5h3.5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 2 8 4v5c0 5.2-3.4 9.4-8 11-4.6-1.6-8-5.8-8-11V6Z"/><path d="m8.8 12 2.2 2.2 4.4-4.4"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="2.8" y="4" width="18.4" height="16" rx="3"/><path d="m7 9 3 3-3 3M12.5 15H17"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3.5 13.8 9l5.5 1.8-5.5 1.8L12 18l-1.8-5.4L4.7 10.8 10.2 9Z"/><path d="M19 16.5v3.2M17.4 18.1h3.2"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2.5"/><path d="M9 21h6M12 17v4"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2h6.5A2.5 2.5 0 0 1 21 9.5V18a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18Z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.8a1 1 0 0 1 1.52-.85l11.1 6.6a1 1 0 0 1 0 1.71L8.52 19.9A1 1 0 0 1 7 19.05Z"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 6v5h-5"/><path d="M4 18v-5h5"/><path d="M18.3 9A7 7 0 0 0 6.1 6.6L4 11m16 2-2.1 4.4A7 7 0 0 1 5.7 15"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-windows" viewBox="0 0 24 24"><path d="M3 5.6 10.4 4.5v7H3Zm0 12.8 7.4 1.1v-6.9H3Zm8.6 1.3L21 21V12.6h-9.4Zm0-15.4v7H21V3Z"/></symbol>
+    <symbol id="i-apple" viewBox="0 0 24 24"><path d="M16.3 12.8c0-2.4 2-3.6 2.1-3.7a4.5 4.5 0 0 0-3.6-1.9c-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9a4.8 4.8 0 0 0-4 2.5c-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3.1 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.3.8c1.4 0 2.2-1.2 3-2.4a10.7 10.7 0 0 0 1.4-2.9 4.3 4.3 0 0 1-2.6-3.8ZM13.9 5.6A4.4 4.4 0 0 0 15 2.4a4.6 4.6 0 0 0-3 1.5 4.2 4.2 0 0 0-1.1 3.1 3.8 3.8 0 0 0 3-1.4Z"/></symbol>
+    <symbol id="i-linux" viewBox="0 0 24 24"><path d="M12 2.5c-2.2 0-3.4 1.8-3.3 4.1.1 1.7-.3 2.7-1.4 4.1-1.6 2-2.8 3.7-2.8 5.7 0 2.3 1.7 3.7 3.1 4.1.4 1.3 2.2 2 4.4 2s4-.7 4.4-2c1.4-.4 3.1-1.8 3.1-4.1 0-2-1.2-3.7-2.8-5.7-1.1-1.4-1.5-2.4-1.4-4.1.1-2.3-1.1-4.1-3.3-4.1Z"/><path d="M9.5 8.5h.01M14.5 8.5h.01M10 15.5c1.3.7 2.7.7 4 0"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12Z"/></symbol>
+  </svg>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="Y LaYncher — на главную">
+        <span class="brand-mark">Y</span>
+        <span class="brand-text">Y <em>LaYncher</em></span>
+      </a>
+
+      <nav class="nav" id="nav" aria-label="Основная навигация">
+        <a href="#features">Возможности</a>
+        <a href="#download">Скачать</a>
+        <a href="#install">Установка</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="icon-link" data-repo-link href="https://github.com/" target="_blank" rel="noopener" aria-label="Репозиторий на GitHub">
+          <svg><use href="#i-github"/></svg>
+        </a>
+        <a class="btn btn-primary btn-sm" href="#download">
+          <svg><use href="#i-download"/></svg>
+          Скачать
+        </a>
+        <button class="menu-btn" id="menu-btn" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="nav">
+          <svg class="icon-menu"><use href="#i-menu"/></svg>
+          <svg class="icon-close"><use href="#i-close"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ================= HERO ================= -->
+    <section class="hero container">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="live-dot"></span> Minecraft Java Edition · Windows 10/11</p>
+        <h1>Лаунчер, который<br /><span class="grad-text">просто работает.</span></h1>
+        <p class="lead">
+          Y LaYncher ставит любые версии Minecraft, Fabric, Forge и OptiFine, сам находит Java
+          и держит ваши миры в порядке. Без лишних кнопок и сложных настроек.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" id="hero-download" href="#download">
+            <svg><use href="#i-download"/></svg>
+            <span class="btn-stack">
+              <strong>Скачать для Windows</strong>
+              <small id="hero-download-meta">Последний релиз</small>
+            </span>
+          </a>
+          <a class="btn btn-ghost btn-lg" href="#features">
+            Возможности
+            <svg><use href="#i-arrow"/></svg>
+          </a>
+        </div>
+
+        <div class="hero-meta">
+          <span class="tag" id="hero-version">v1.0.0</span>
+          <span class="dot-sep"></span>
+          <span id="hero-size">Windows · .exe</span>
+          <span class="dot-sep"></span>
+          <span id="hero-date">обновлено недавно</span>
+        </div>
+
+        <ul class="hero-badges">
+          <li><svg><use href="#i-check"/></svg> Бесплатно</li>
+          <li><svg><use href="#i-check"/></svg> Без рекламы</li>
+          <li><svg><use href="#i-check"/></svg> Открытый код</li>
+        </ul>
+      </div>
+
+      <div class="hero-visual">
+        <div class="launcher-window" aria-hidden="true">
+          <div class="lw-bar">
+            <div class="lw-brand"><span class="lw-mark">Y</span><span>Y <em>LaYncher</em></span><b>v1.0</b></div>
+            <div class="lw-controls"><i></i><i></i><i class="danger"></i></div>
+          </div>
+
+          <div class="lw-body">
+            <aside class="lw-side">
+              <div class="lw-account">
+                <span class="lw-avatar">S</span>
+                <span class="lw-account-meta"><strong>Steve</strong><small>Microsoft</small></span>
+                <span class="lw-online"></span>
+              </div>
+
+              <div class="lw-nav">
+                <span class="active"><svg><use href="#i-home"/></svg> Главная</span>
+                <span><svg><use href="#i-cube"/></svg> Версии <b>12</b></span>
+                <span><svg><use href="#i-gear"/></svg> Настройки</span>
+              </div>
+
+              <div class="lw-sys">
+                <span><i class="ok"></i> Java 21</span>
+                <span><i></i> 8 ГБ RAM</span>
+                <span><i class="ok"></i> Mojang online</span>
+              </div>
+            </aside>
+
+            <div class="lw-main">
+              <div class="lw-head">
+                <span>С возвращением, <b>Steve</b></span>
+                <span class="lw-refresh"><svg><use href="#i-refresh"/></svg></span>
+              </div>
+
+              <div class="lw-hero">
+                <span class="lw-tag"><i></i> Minecraft Java Edition</span>
+                <h3>Новое приключение<br />начинается <span>здесь</span>.</h3>
+
+                <div class="lw-row">
+                  <div class="lw-picker">
+                    <span class="lw-cube"><svg><use href="#i-cube"/></svg></span>
+                    <span class="lw-picker-meta"><strong>1.21.8</strong><small>Release · Fabric</small></span>
+                    <svg class="lw-chev"><use href="#i-chevron"/></svg>
+                  </div>
+                  <div class="lw-play"><svg><use href="#i-play"/></svg> Играть</div>
+                </div>
+
+                <div class="lw-progress">
+                  <div class="lw-progress-head"><span>Проверка файлов</span><span>72%</span></div>
+                  <div class="lw-track"><i></i></div>
+                </div>
+              </div>
+
+              <div class="lw-cards"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+        </div>
+
+        <span class="float-pill pill-fabric">Fabric</span>
+        <span class="float-pill pill-forge">Forge</span>
+        <span class="float-pill pill-optifine">OptiFine</span>
+
+        <div class="float-block" aria-hidden="true">
+          <span class="face front"></span>
+          <span class="face back"></span>
+          <span class="face right"></span>
+          <span class="face left"></span>
+          <span class="face top"></span>
+          <span class="face bottom"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MARQUEE ================= -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>Vanilla</span><b>◆</b><span>Fabric</span><b>◆</b><span>Forge</span><b>◆</b><span>OptiFine</span><b>◆</b><span>Microsoft</span><b>◆</b><span>Java 8–21</span><b>◆</b><span>Windows 10/11</span><b>◆</b>
+        <span>Vanilla</span><b>◆</b><span>Fabric</span><b>◆</b><span>Forge</span><b>◆</b><span>OptiFine</span><b>◆</b><span>Microsoft</span><b>◆</b><span>Java 8–21</span><b>◆</b><span>Windows 10/11</span><b>◆</b>
+      </div>
+    </div>
+
+    <!-- ================= FEATURES ================= -->
+    <section class="section container" id="features">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow"><span class="live-dot violet"></span> Возможности</p>
+          <h2>Всё нужное — <span class="grad-text-violet">уже внутри</span></h2>
+        </div>
+        <p class="section-sub">Никаких десятков вкладок и ручной возни с файлами. Лаунчер делает скучную часть сам.</p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card feature-wide">
+          <div class="feature-icon lime"><svg><use href="#i-cube"/></svg></div>
+          <h3>Любая версия Minecraft</h3>
+          <p>Релизы и снапшоты прямо с официальных серверов Mojang. Скачивание, проверка хэшей и библиотеки — автоматически.</p>
+          <div class="feature-chips"><span>1.21.8</span><span>1.20.1</span><span>1.12.2</span><span>снапшоты</span></div>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon violet"><svg><use href="#i-shield"/></svg></div>
+          <h3>Fabric, Forge, OptiFine</h3>
+          <p>Выберите игру и сборку — лаунчер поставит модлоадер и корректно объединит аргументы.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon cyan"><svg><use href="#i-user"/></svg></div>
+          <h3>Вход через Microsoft</h3>
+          <p>Лицензионные серверы, скины и достижения. Сессия продлевается сама, пароль не хранится.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon amber"><svg><use href="#i-java"/></svg></div>
+          <h3>Java без головной боли</h3>
+          <p>Лаунчер найдёт подходящую Java или скачает официальную среду Mojang, если её нет.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon lime"><svg><use href="#i-terminal"/></svg></div>
+          <h3>Понятная консоль</h3>
+          <p>Живой лог запуска, этапы установки, скорость и подсказки при типичных ошибках.</p>
+        </article>
+
+        <article class="feature-card feature-wide feature-full">
+          <div class="feature-icon violet"><svg><use href="#i-monitor"/></svg></div>
+          <h3>Настройки, которые не мешают</h3>
+          <p>Память, разрешение, полный экран, JVM-аргументы и папка игры сохраняются автоматически. Офлайн-аккаунт с ником и стабильным UUID — для одиночной игры и серверов без проверки лицензии.</p>
+          <div class="feature-chips"><span>4–8 ГБ RAM</span><span>Fullscreen</span><span>JVM args</span><span>Offline</span></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= DOWNLOAD ================= -->
+    <section class="section container" id="download">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow"><span class="live-dot"></span> Релизы</p>
+          <h2>Скачать <span class="grad-text">Y LaYncher</span></h2>
+        </div>
+        <div class="section-actions">
+          <a class="link-btn" data-releases-link href="https://github.com/" target="_blank" rel="noopener">
+            Все релизы на GitHub <svg><use href="#i-external"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div id="latest-release" class="latest-card" aria-live="polite" aria-busy="true">
+        <div class="latest-skeleton">
+          <span class="sk sk-line-sm"></span>
+          <span class="sk sk-line-lg"></span>
+          <span class="sk sk-line"></span>
+          <span class="sk sk-btn"></span>
+        </div>
+      </div>
+
+      <div class="release-head">
+        <h3>История релизов</h3>
+        <button class="link-btn" id="releases-refresh" type="button">
+          <svg><use href="#i-refresh"/></svg> Обновить
+        </button>
+      </div>
+      <div id="releases-list" class="releases-list" aria-live="polite"></div>
+
+      <p class="release-note">
+        Список формируется из GitHub Releases автоматически. Если релизов ещё нет — соберите установщик
+        по инструкции в <code>SITE.md</code> или прикрепите файл к релизу вручную.
+      </p>
+    </section>
+
+    <!-- ================= INSTALL ================= -->
+    <section class="section container" id="install">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow"><span class="live-dot violet"></span> Установка</p>
+          <h2>Три шага до игры</h2>
+        </div>
+        <p class="section-sub">Установщик NSIS: можно выбрать папку и создать ярлык на рабочем столе.</p>
+      </div>
+
+      <div class="steps">
+        <article class="step-card">
+          <span class="step-number">01</span>
+          <div class="step-icon"><svg><use href="#i-download"/></svg></div>
+          <h3>Скачайте установщик</h3>
+          <p>Возьмите последний <code>.exe</code> из блока «Скачать». Windows может показать предупреждение SmartScreen — нажмите «Подробнее» → «Выполнить в любом случае».</p>
+        </article>
+        <article class="step-card">
+          <span class="step-number">02</span>
+          <div class="step-icon"><svg><use href="#i-folder"/></svg></div>
+          <h3>Установите и запустите</h3>
+          <p>Выберите папку, дождитесь установки и откройте Y LaYncher. Отдельно ставить Java не обязательно — лаунчер сделает это сам.</p>
+        </article>
+        <article class="step-card">
+          <span class="step-number">03</span>
+          <div class="step-icon"><svg><use href="#i-play"/></svg></div>
+          <h3>Выберите версию и играйте</h3>
+          <p>Добавьте аккаунт, выберите версию или модлоадер, нажмите «Играть». Прогресс установки и логи видны прямо в лаунчере.</p>
+        </article>
+      </div>
+
+      <div class="install-note">
+        <svg><use href="#i-lock"/></svg>
+        <p><strong>Безопасность.</strong> Лаунчер не получает и не хранит пароль Microsoft: вход идёт через официальный OAuth Device Code Flow, а токены шифруются средствами ОС.</p>
+      </div>
+    </section>
+
+    <!-- ================= REQUIREMENTS + FAQ ================= -->
+    <section class="section container" id="faq">
+      <div class="split">
+        <div class="requirements">
+          <p class="eyebrow"><span class="live-dot"></span> Требования</p>
+          <h2>Что нужно для запуска</h2>
+          <ul class="req-list">
+            <li><span class="req-icon"><svg><use href="#i-windows"/></svg></span><span><strong>Windows 10/11</strong><small>64-битная система</small></span></li>
+            <li><span class="req-icon"><svg><use href="#i-chip"/></svg></span><span><strong>4 ГБ ОЗУ</strong><small>8 ГБ рекомендуется для сборок с модами</small></span></li>
+            <li><span class="req-icon"><svg><use href="#i-java"/></svg></span><span><strong>Java 8–21</strong><small>Лаунчер найдёт или скачает нужную версию</small></span></li>
+            <li><span class="req-icon"><svg><use href="#i-monitor"/></svg></span><span><strong>Интернет</strong><small>Для установки версий и входа в аккаунт</small></span></li>
+          </ul>
+          <p class="req-foot">macOS и Linux: лаунчер можно собрать из исходников, готовые сборки зависят от релизов в GitHub.</p>
+        </div>
+
+        <div class="faq">
+          <p class="eyebrow"><span class="live-dot violet"></span> Вопросы</p>
+          <h2>Коротко о главном</h2>
+
+          <details class="faq-item" open>
+            <summary>Это бесплатно?<svg><use href="#i-chevron"/></svg></summary>
+            <p>Да. Y LaYncher распространяется бесплатно по лицензии MIT. Для игры нужна купленная Minecraft: Java Edition, если вы хотите заходить на лицензионные серверы; для одиночной игры и офлайн-серверов достаточно офлайн-аккаунта.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Нужно ли устанавливать Java отдельно?<svg><use href="#i-chevron"/></svg></summary>
+            <p>Нет. Лаунчер ищет Java на компьютере, а если подходящей версии нет — скачивает официальную среду Mojang. Для старых версий нужна Java 8, для современных Forge/OptiFine — 17 или 21.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Куда скачиваются версии и миры?<svg><use href="#i-chevron"/></svg></summary>
+            <p>По умолчанию в <code>%APPDATA%\.minecraft</code>. Папку можно изменить в настройках. Миры, моды и ресурспаки лежат в привычных папках <code>saves</code>, <code>mods</code> и <code>resourcepacks</code>.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Можно ли играть с модами?<svg><use href="#i-chevron"/></svg></summary>
+            <p>Да. Установите Fabric, Forge или OptiFine, затем положите моды в папку <code>mods</code> — лаунчер умеет открывать её одной кнопкой. Менеджера модов внутри нет: это осознанно простая установка.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Почему Windows предупреждает при запуске?<svg><use href="#i-chevron"/></svg></summary>
+            <p>Установщик не подписан платным сертификатом, поэтому SmartScreen может показать предупреждение. Файл можно проверить по контрольной сумме из GitHub Releases. Со временем репутация файла растёт.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Лаунчер связан с Mojang или Microsoft?<svg><use href="#i-chevron"/></svg></summary>
+            <p>Нет. Это неофициальный проект сообщества. Minecraft, Mojang и Microsoft — товарные знаки соответствующих владельцев.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CTA ================= -->
+    <section class="container">
+      <div class="cta-card">
+        <div class="cta-glow"></div>
+        <div class="cta-copy">
+          <p class="eyebrow"><span class="live-dot"></span> Готовы?</p>
+          <h2>Соберите свой мир.<br /><span class="grad-text">Остальное сделает лаунчер.</span></h2>
+          <p>Один установщик, ноль лишних движений. Ваши версии, моды и миры — в одном месте.</p>
+        </div>
+        <div class="cta-actions">
+          <a class="btn btn-primary btn-lg" id="cta-download" href="#download">
+            <svg><use href="#i-download"/></svg>
+            <span class="btn-stack"><strong>Скачать Y LaYncher</strong><small>Windows · бесплатно</small></span>
+          </a>
+          <a class="btn btn-ghost btn-lg" data-repo-link href="https://github.com/" target="_blank" rel="noopener">
+            <svg><use href="#i-github"/></svg> Исходный код
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="#top">
+          <span class="brand-mark">Y</span>
+          <span class="brand-text">Y <em>LaYncher</em></span>
+        </a>
+        <p>Красивый и быстрый лаунчер Minecraft: Java Edition с русским интерфейсом.</p>
+      </div>
+      <div class="footer-links">
+        <a href="#features">Возможности</a>
+        <a href="#download">Скачать</a>
+        <a href="#install">Установка</a>
+        <a href="#faq">FAQ</a>
+        <a data-repo-link href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <div class="footer-meta">
+        <span>© <span id="year">2026</span> Y LaYncher · MIT</span>
+        <span>Неофициальный проект. Не связан с Mojang Studios или Microsoft.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
