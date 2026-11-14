@@ -421,6 +421,78 @@ async function ensureSession({ auth, onStatus, force = false }) {
   return session;
 }
 
+async function uploadSkin(auth, pngBuffer, variant = 'classic') {
+  if (!auth?.minecraftAccessToken) {
+    throw new AuthError('Нет активной сессии Minecraft. Войдите в аккаунт заново.', 'AUTH_REQUIRED');
+  }
+  const safeVariant = variant === 'slim' ? 'slim' : 'classic';
+  const form = new FormData();
+  form.append('variant', safeVariant);
+  form.append('file', new Blob([pngBuffer], { type: 'image/png' }), 'skin.png');
+
+  let response;
+  try {
+    response = await fetch(`${MINECRAFT_PROFILE_URL}/skins`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${auth.minecraftAccessToken}`, 'user-agent': USER_AGENT },
+      body: form,
+    });
+  } catch (error) {
+    throw new AuthError('Не удалось связаться с серверами Minecraft.', 'NETWORK_ERROR', error?.message);
+  }
+
+  if (!response.ok) {
+    let details = null;
+    try {
+      details = await response.json();
+    } catch {
+      details = await response.text().catch(() => null);
+    }
+    throw new AuthError(
+      friendlyRequestError(details, response.status) || 'Не удалось загрузить скин',
+      response.status === 401 ? 'AUTH_REQUIRED' : 'SKIN_UPLOAD_FAILED',
+      details,
+    );
+  }
+
+  let profile = null;
+  try {
+    profile = await requestJson(MINECRAFT_PROFILE_URL, {
+      headers: { authorization: `Bearer ${auth.minecraftAccessToken}` },
+    });
+  } catch {
+    profile = null;
+  }
+  return {
+    profile: profile
+      ? { id: dashUuid(profile.id), name: String(profile.name || ''), skins: Array.isArray(profile.skins) ? profile.skins : [] }
+      : null,
+  };
+}
+
+async function fetchCurrentSkin(auth) {
+  if (!auth?.minecraftAccessToken) {
+    throw new AuthError('Нет активной сессии Minecraft. Войдите в аккаунт заново.', 'AUTH_REQUIRED');
+  }
+  const profile = await requestJson(MINECRAFT_PROFILE_URL, {
+    headers: { authorization: `Bearer ${auth.minecraftAccessToken}` },
+  });
+  const skins = Array.isArray(profile?.skins) ? profile.skins : [];
+  const active = skins.find((skin) => skin?.state === 'ACTIVE') || skins[0] || null;
+  if (!active?.url) return { url: '', variant: 'classic', skins };
+
+  let response;
+  try {
+    response = await fetch(active.url, { headers: { 'user-agent': USER_AGENT } });
+  } catch (error) {
+    throw new AuthError('Не удалось скачать текущий скин.', 'NETWORK_ERROR', error?.message);
+  }
+  if (!response.ok) throw new AuthError('Не удалось скачать текущий скин.', 'SKIN_DOWNLOAD_FAILED');
+  const buffer = Buffer.from(await response.arrayBuffer());
+  const variant = active.variant === 'slim' ? 'slim' : 'classic';
+  return { dataUrl: `data:image/png;base64,${buffer.toString('base64')}`, variant, url: active.url, skins };
+}
+
 module.exports = {
   AuthError,
   CLIENT_ID,
@@ -430,4 +502,6 @@ module.exports = {
   loginWithTokens,
   ensureSession,
   dashUuid,
+  uploadSkin,
+  fetchCurrentSkin,
 };

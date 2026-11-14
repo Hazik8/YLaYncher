@@ -33,6 +33,29 @@ const state = {
   mods: [],
   modsLoading: false,
   modsError: '',
+  modsSource: 'modrinth',
+  modsQuery: '',
+  modsVersion: '',
+  modsLoader: '',
+  modsSort: 'relevance',
+  modsOffset: 0,
+  modsTotal: 0,
+  modsHasMore: false,
+  installedMods: [],
+  curseforgeKeySet: false,
+  skinTool: 'brush',
+  skinColor: '#c9a07a',
+  skinZoom: 6,
+  skinGrid: true,
+  skinModel: 'classic',
+  skinHistory: [],
+  skinHistoryIndex: -1,
+  skinDrawing: false,
+  skinLastPixel: null,
+  skinRotX: -18,
+  skinRotY: 32,
+  skinRotating: false,
+  skinRotStart: null,
 };
 
 const accountCache = new Map();
@@ -1253,6 +1276,7 @@ async function loadVersions(force = false, silent = false) {
     $('#sys-network').style.color = '';
     renderHome();
     renderVersionsPage();
+    if (state.page === 'mods') populateModsVersionSelect();
   } catch (error) {
     state.networkOk = false;
     $('#sys-network').textContent = 'Нет связи';
@@ -1464,6 +1488,645 @@ function confirmDelete(versionId) {
       toast('Версия удалена', name);
     },
   });
+}
+
+/* ------------------------------------------------------------------ skin editor */
+
+function skinCanvas() {
+  return $('#skin-canvas');
+}
+
+function skinCtx() {
+  const canvas = skinCanvas();
+  return canvas ? canvas.getContext('2d') : null;
+}
+
+function skinPushHistory() {
+  const canvas = skinCanvas();
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  state.skinHistory = state.skinHistory.slice(0, state.skinHistoryIndex + 1);
+  state.skinHistory.push(snapshot);
+  if (state.skinHistory.length > 60) {
+    state.skinHistory.shift();
+  }
+  state.skinHistoryIndex = state.skinHistory.length - 1;
+  updateSkin3DTexture();
+}
+
+function skinUndo() {
+  if (state.skinHistoryIndex <= 0) return;
+  state.skinHistoryIndex -= 1;
+  const ctx = skinCtx();
+  ctx.putImageData(state.skinHistory[state.skinHistoryIndex], 0, 0);
+  updateSkin3DTexture();
+}
+
+function skinRedo() {
+  if (state.skinHistoryIndex >= state.skinHistory.length - 1) return;
+  state.skinHistoryIndex += 1;
+  const ctx = skinCtx();
+  ctx.putImageData(state.skinHistory[state.skinHistoryIndex], 0, 0);
+  updateSkin3DTexture();
+}
+
+function skinPixelFromEvent(event) {
+  const canvas = skinCanvas();
+  if (!canvas) return null;
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor(((event.clientX - rect.left) / rect.width) * canvas.width);
+  const y = Math.floor(((event.clientY - rect.top) / rect.height) * canvas.height);
+  if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) return null;
+  return { x, y };
+}
+
+function skinPaintPixel(x, y, color, erase = false) {
+  const ctx = skinCtx();
+  if (!ctx) return;
+  if (erase) {
+    ctx.clearRect(x, y, 1, 1);
+  } else {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, 1, 1);
+  }
+}
+
+function skinFloodFill(startX, startY, replacementColor, erase = false) {
+  const canvas = skinCanvas();
+  const ctx = skinCtx();
+  if (!canvas || !ctx) return;
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const width = canvas.width;
+  const height = canvas.height;
+  const startIndex = (startY * width + startX) * 4;
+  const target = [data[startIndex], data[startIndex + 1], data[startIndex + 2], data[startIndex + 3]];
+
+  function matches(index) {
+    return (
+      data[index] === target[0] &&
+      data[index + 1] === target[1] &&
+      data[index + 2] === target[2] &&
+      data[index + 3] === target[3]
+    );
+  }
+
+  const replacement = erase
+    ? [0, 0, 0, 0]
+    : hexToRgba(state.skinColor);
+  if (target.every((value, index) => value === replacement[index])) return;
+
+  const stack = [[startX, startY]];
+  while (stack.length) {
+    const [x, y] = stack.pop();
+    if (x < 0 || y < 0 || x >= width || y >= height) continue;
+    const index = (y * width + x) * 4;
+    if (!matches(index)) continue;
+    data[index] = replacement[0];
+    data[index + 1] = replacement[1];
+    data[index + 2] = replacement[2];
+    data[index + 3] = replacement[3];
+    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+  ctx.putImageData(imageData, 0, 0);
+}
+
+function hexToRgba(hex) {
+  const value = String(hex || '#000000').replace('#', '');
+  const full = value.length === 3 ? value.split('').map((char) => char + char).join('') : value;
+  const num = parseInt(full, 16);
+  return [(num >> 16) & 255, (num >> 8) & 255, num & 255, 255];
+}
+
+function skinDrawTemplate(model) {
+  const canvas = skinCanvas();
+  const ctx = skinCtx();
+  if (!canvas || !ctx) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const skin = model === 'slim' ? '#c9a07a' : '#c9a07a';
+  const shirt = model === 'slim' ? '#3f7f4c' : '#2f5f9f';
+  const pants = '#3a3a3a';
+  const shoes = '#2b2b2b';
+
+  // head front
+  ctx.fillStyle = skin;
+  ctx.fillRect(8, 8, 8, 8);
+  // body
+  ctx.fillStyle = shirt;
+  ctx.fillRect(20, 20, 8, 12);
+  const armWidth = model === 'slim' ? 3 : 4;
+  // Front faces in the Minecraft skin atlas: right arm, left arm, right leg, left leg.
+  ctx.fillRect(44, 20, armWidth, 12);
+  ctx.fillRect(36, 52, armWidth, 12);
+  ctx.fillStyle = pants;
+  ctx.fillRect(4, 20, 4, 12);
+  ctx.fillRect(20, 52, 4, 12);
+  // Shoes and shirt hem on the visible front faces.
+  ctx.fillStyle = shoes;
+  ctx.fillRect(4, 30, 4, 2);
+  ctx.fillRect(20, 62, 4, 2);
+  ctx.fillRect(20, 30, 8, 2);
+  ctx.fillRect(36, 62, armWidth, 2);
+  ctx.fillRect(44, 30, armWidth, 2);
+
+  // simple face
+  ctx.fillStyle = '#2b2b2b';
+  ctx.fillRect(10, 11, 1, 1);
+  ctx.fillRect(13, 11, 1, 1);
+  ctx.fillRect(10, 14, 4, 1);
+  skinPushHistory();
+  updateSkinCanvasDisplay();
+  buildSkin3D();
+}
+
+function updateSkinCanvasDisplay() {
+  const canvas = skinCanvas();
+  if (!canvas) return;
+  canvas.style.width = `${64 * state.skinZoom}px`;
+  canvas.style.height = `${64 * state.skinZoom}px`;
+  canvas.style.imageRendering = 'pixelated';
+  const grid = $('#skin-grid');
+  // grid overlay handled by CSS background? We'll toggle class
+  canvas.classList.toggle('show-grid', Boolean(state.skinGrid));
+}
+
+function skinSetTool(tool) {
+  state.skinTool = tool;
+  $$('.skins-tool-row [data-skin-tool]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.skinTool === tool);
+  });
+}
+
+function initSkinEditor() {
+  const canvas = skinCanvas();
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  state.skinHistory = [];
+  state.skinHistoryIndex = -1;
+  state.skinTool = state.skinTool || 'brush';
+  state.skinColor = state.skinColor || '#c9a07a';
+  state.skinZoom = state.skinZoom || 6;
+  state.skinGrid = state.skinGrid !== false;
+  state.skinModel = state.skinModel || 'classic';
+
+  const colorInput = $('#skin-color');
+  if (colorInput) colorInput.value = state.skinColor;
+  const zoomInput = $('#skin-zoom');
+  if (zoomInput) zoomInput.value = state.skinZoom;
+  const gridInput = $('#skin-grid');
+  if (gridInput) gridInput.checked = state.skinGrid;
+  const modelSelect = $('#skin-model');
+  if (modelSelect) modelSelect.value = state.skinModel;
+
+  skinSetTool(state.skinTool);
+  skinPushHistory();
+  updateSkinCanvasDisplay();
+  buildSkin3D();
+  updateSkinStatus();
+}
+
+function updateSkinStatus(message) {
+  const element = $('#skin-status');
+  if (element) element.textContent = message || (getAccount()?.type === 'microsoft'
+    ? 'Лицензионный аккаунт готов к загрузке скина.'
+    : 'Выберите лицензионный аккаунт, чтобы загрузить скин.');
+}
+
+function skinLoadImage(dataUrl) {
+  const canvas = skinCanvas();
+  const ctx = skinCtx();
+  if (!canvas || !ctx) return;
+  const image = new Image();
+  image.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    skinPushHistory();
+    updateSkinCanvasDisplay();
+  };
+  image.src = dataUrl;
+}
+
+async function skinLoadCurrent() {
+  try {
+    const result = await api.skinsCurrent();
+    if (!result?.ok) throw new Error(result?.error || 'Не удалось получить скин');
+    if (result.dataUrl) {
+      skinLoadImage(result.dataUrl);
+      if (result.variant) {
+        state.skinModel = result.variant;
+        const select = $('#skin-model');
+        if (select) select.value = state.skinModel;
+        buildSkin3D();
+      }
+      toast('Текущий скин загружен', '');
+    } else {
+      toast('У аккаунта нет скина', '', 'info');
+    }
+  } catch (error) {
+    toast('Не удалось загрузить скин', error?.message || 'Ошибка', 'error');
+  }
+}
+
+async function skinUpload() {
+  const canvas = skinCanvas();
+  if (!canvas) return;
+  const account = getAccount();
+  if (!account || account.type !== 'microsoft') {
+    toast('Нужен лицензионный аккаунт', 'Войдите через Microsoft, чтобы загрузить скин.', 'error');
+    return;
+  }
+  const dataUrl = canvas.toDataURL('image/png');
+  const variant = $('#skin-model')?.value || state.skinModel || 'classic';
+  state.skinModel = variant;
+  try {
+    const result = await api.skinsUpload({ pngDataUrl: dataUrl, variant });
+    if (!result?.ok) throw new Error(result?.error || 'Не удалось загрузить скин');
+    toast('Скин загружен', 'Изменения применятся после перезапуска игры.');
+    updateSkinStatus('Скин успешно загружен на аккаунт.');
+  } catch (error) {
+    toast('Не удалось загрузить скин', error?.message || 'Ошибка', 'error');
+  }
+}
+
+function skinSavePng() {
+  const canvas = skinCanvas();
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.href = canvas.toDataURL('image/png');
+  link.download = 'skin.png';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function buildSkin3D() {
+  const container = $('#skin-model3d');
+  if (!container) return;
+  const S = 6;
+  const region = (x, y, w, h) => ({ x, y, w, h });
+
+  const headTex = {
+    front: region(8, 8, 8, 8),
+    back: region(24, 8, 8, 8),
+    right: region(0, 8, 8, 8),
+    left: region(16, 8, 8, 8),
+    top: region(8, 0, 8, 8),
+    bottom: region(16, 0, 8, 8),
+  };
+  const bodyTex = {
+    front: region(20, 20, 8, 12),
+    back: region(32, 20, 8, 12),
+    right: region(16, 20, 4, 12),
+    left: region(28, 20, 4, 12),
+    top: region(20, 16, 8, 4),
+    bottom: region(28, 16, 8, 4),
+  };
+  const armTex = {
+    front: region(44, 20, 4, 12),
+    back: region(52, 20, 4, 12),
+    right: region(40, 20, 4, 12),
+    left: region(48, 20, 4, 12),
+    top: region(44, 16, 4, 4),
+    bottom: region(48, 16, 4, 4),
+  };
+  const leftSleeveTex = {
+    front: region(36, 52, 4, 12),
+    back: region(52, 52, 4, 12),
+    right: region(32, 52, 4, 12),
+    left: region(40, 52, 4, 12),
+    top: region(36, 48, 4, 4),
+    bottom: region(40, 48, 4, 4),
+  };
+  const rightLegTex = {
+    front: region(4, 20, 4, 12),
+    back: region(12, 20, 4, 12),
+    right: region(0, 20, 4, 12),
+    left: region(8, 20, 4, 12),
+    top: region(4, 16, 4, 4),
+    bottom: region(8, 16, 4, 4),
+  };
+  const leftLegTex = {
+    front: region(20, 52, 4, 12),
+    back: region(28, 52, 4, 12),
+    right: region(16, 52, 4, 12),
+    left: region(24, 52, 4, 12),
+    top: region(20, 48, 4, 4),
+    bottom: region(24, 48, 4, 4),
+  };
+
+  function cube(pos, dims, tex) {
+    const [w, h, d] = dims;
+    const faces = [
+      { key: 'front', transform: `translateZ(${(d * S) / 2}px)`, w: tex.front.w, hh: tex.front.h, t: tex.front },
+      { key: 'back', transform: `rotateY(180deg) translateZ(${(d * S) / 2}px)`, w: tex.back.w, hh: tex.back.h, t: tex.back },
+      { key: 'right', transform: `rotateY(90deg) translateZ(${(w * S) / 2}px)`, w: tex.right.w, hh: tex.right.h, t: tex.right },
+      { key: 'left', transform: `rotateY(-90deg) translateZ(${(w * S) / 2}px)`, w: tex.left.w, hh: tex.left.h, t: tex.left },
+      { key: 'top', transform: `rotateX(90deg) translateZ(${(h * S) / 2}px)`, w: tex.top.w, hh: tex.top.h, t: tex.top },
+      { key: 'bottom', transform: `rotateX(-90deg) translateZ(${(h * S) / 2}px)`, w: tex.bottom.w, hh: tex.bottom.h, t: tex.bottom },
+    ];
+    const faceDivs = faces
+      .map(
+        (face) =>
+          `<div class="skin-face" style="width:${face.w * S}px;height:${face.hh * S}px;margin-top:-${(face.hh * S) / 2}px;margin-left:-${(face.w * S) / 2}px;transform:${face.transform};background-size:${64 * S}px ${64 * S}px;background-position:-${face.t.x * S}px -${face.t.y * S}px;"></div>`,
+      )
+      .join('');
+    return `<div class="skin-part" style="transform:translate3d(${pos[0] * S}px,${pos[1] * S}px,${pos[2] * S}px)">${faceDivs}</div>`;
+  }
+
+  const slim = state.skinModel === 'slim';
+  const armWidth = slim ? 3 : 4;
+  const rightArmTex = slim
+    ? { ...armTex, front: region(44, 20, 3, 12), back: region(49, 20, 3, 12), top: region(44, 16, 3, 4), bottom: region(48, 16, 3, 4) }
+    : armTex;
+  const leftArmTex = slim
+    ? { ...leftSleeveTex, front: region(36, 52, 3, 12), back: region(45, 52, 3, 12), top: region(36, 48, 3, 4), bottom: region(40, 48, 3, 4) }
+    : leftSleeveTex;
+  const parts = [
+    cube([0, -10, 0], [8, 8, 8], headTex),
+    cube([0, 0, 0], [8, 12, 4], bodyTex),
+    cube([-4 - armWidth / 2, 0, 0], [armWidth, 12, 4], leftArmTex),
+    cube([4 + armWidth / 2, 0, 0], [armWidth, 12, 4], rightArmTex),
+    cube([-2, 12, 0], [4, 12, 4], rightLegTex),
+    cube([2, 12, 0], [4, 12, 4], leftLegTex),
+  ];
+  container.innerHTML = parts.join('');
+  container.style.transform = `rotateX(${state.skinRotX}deg) rotateY(${state.skinRotY}deg)`;
+  updateSkin3DTexture();
+}
+
+function updateSkin3DTexture() {
+  const canvas = skinCanvas();
+  const preview = $('#skin-preview-3d');
+  if (!canvas || !preview) return;
+  preview.style.setProperty('--skin-texture', `url(${canvas.toDataURL('image/png')})`);
+}
+
+/* ------------------------------------------------------------------ mods page */
+
+function updateModsNavBadge() {
+  const badge = $('#nav-mods');
+  if (badge) badge.textContent = state.installedMods.length;
+}
+
+function setModsSource(source) {
+  state.modsSource = source === 'curseforge' ? 'curseforge' : 'modrinth';
+  $$('.mods-source').forEach((button) => {
+    const active = button.dataset.modsSource === state.modsSource;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  updateModsKeyBanner();
+  updateModsSourceStates();
+}
+
+function updateModsKeyBanner() {
+  const banner = $('#mods-key-banner');
+  if (!banner) return;
+  banner.hidden = !(state.modsSource === 'curseforge' && !state.curseforgeKeySet);
+}
+
+function updateModsSourceStates() {
+  $$('[data-source-state]').forEach((element) => {
+    const source = element.dataset.sourceState;
+    if (source === 'curseforge') {
+      element.textContent = state.curseforgeKeySet ? 'ключ сохранён' : 'нужен ключ';
+      element.classList.toggle('warn', !state.curseforgeKeySet);
+    } else {
+      element.textContent = 'готов';
+      element.classList.remove('warn');
+    }
+  });
+}
+
+function populateModsVersionSelect() {
+  const select = $('#mods-version');
+  if (!select) return;
+  const previous = state.modsVersion || select.value;
+  const releases = (state.versions || []).filter((version) => version.type === 'release');
+  const options = ['<option value="">Любая</option>']
+    .concat(releases.slice(0, 250).map((version) => `<option value="${escapeHtml(version.id)}">${escapeHtml(version.id)}</option>`))
+    .join('');
+  select.innerHTML = options;
+
+  let nextValue = '';
+  if (previous && [...select.options].some((option) => option.value === previous)) {
+    nextValue = previous;
+  } else {
+    const selected = resolveSelected();
+    if (selected && selected.id && selected.id !== 'latest-release' && selected.id !== 'latest-snapshot') {
+      nextValue = selected.id;
+    } else if (state.latest?.release) {
+      nextValue = state.latest.release;
+    }
+  }
+  if (nextValue && [...select.options].some((option) => option.value === nextValue)) {
+    select.value = nextValue;
+  }
+  state.modsVersion = select.value;
+  updateModsTarget();
+}
+
+function updateModsTarget() {
+  const element = $('#mods-target');
+  if (!element) return;
+  const version = state.modsVersion || 'любая';
+  const loader = state.modsLoader || 'любой';
+  element.innerHTML = `<span>Цель: <strong>${escapeHtml(version)}</strong> · ${escapeHtml(loader)}</span>`;
+}
+
+function renderModsStatus(message = '', type = '') {
+  const element = $('#mods-status');
+  if (!element) return;
+  element.textContent = message;
+  element.className = `mods-status${type ? ` ${type}` : ''}`;
+}
+
+function renderModsGrid() {
+  const grid = $('#mods-grid');
+  if (!grid) return;
+  if (!state.modsList.length) {
+    grid.innerHTML = '<div class="version-empty">Моды не найдены. Попробуйте изменить фильтры.</div>';
+    return;
+  }
+  grid.innerHTML = state.modsList
+    .map((mod) => {
+      const downloads = Number(mod.downloads || 0).toLocaleString('ru-RU');
+      const categories = (Array.isArray(mod.categories) ? mod.categories : []).slice(0, 4);
+      const versions = Array.isArray(mod.versions) ? mod.versions.slice(0, 3) : [];
+      return `
+        <article class="mod-card">
+          <div class="mod-card-head">
+            ${mod.icon ? `<img class="mod-icon" src="${escapeHtml(mod.icon)}" alt="" onerror="this.style.display='none'" />` : ''}
+            <div class="mod-card-title">
+              <strong>${escapeHtml(mod.title)}</strong>
+              <small>${escapeHtml(mod.author || 'Неизвестен')} · ${downloads} скачиваний</small>
+            </div>
+          </div>
+          <p class="mod-desc">${escapeHtml(mod.description || '')}</p>
+          <div class="mod-meta">
+            ${categories.map((category) => `<span class="tag">${escapeHtml(category)}</span>`).join('')}
+            ${versions.length ? `<span class="tag">MC ${escapeHtml(versions.join(', '))}</span>` : ''}
+            ${mod.source === 'curseforge' ? '<span class="tag tag-amber">CurseForge</span>' : '<span class="tag tag-lime">Modrinth</span>'}
+          </div>
+          <div class="mod-actions">
+            ${mod.url ? `<button class="btn btn-ghost btn-sm" data-mod-open="${escapeHtml(mod.url)}">Страница</button>` : ''}
+            <button class="btn btn-primary btn-sm" data-mod-install="1" data-mod-project="${escapeHtml(mod.id)}">
+              <svg><use href="#i-download"/></svg> Установить
+            </button>
+          </div>
+        </article>`;
+    })
+    .join('');
+}
+
+function updateModsMoreButton() {
+  const button = $('#mods-more');
+  if (!button) return;
+  button.hidden = !state.modsHasMore || state.modsLoading;
+}
+
+async function searchModsPage(reset = true) {
+  if (state.modsLoading) return;
+  const input = $('#mods-query');
+  const query = String(input?.value || '').trim();
+  state.modsQuery = query;
+  state.modsLoader = $('#mods-loader')?.value || '';
+  state.modsSort = $('#mods-sort')?.value || 'relevance';
+  state.modsVersion = $('#mods-version')?.value || '';
+  updateModsTarget();
+
+  if (reset) {
+    state.modsOffset = 0;
+    state.modsList = [];
+    state.modsTotal = 0;
+    state.modsHasMore = false;
+  }
+
+  state.modsLoading = true;
+  renderModsStatus('Поиск…');
+  updateModsMoreButton();
+  const grid = $('#mods-grid');
+  if (grid && reset) grid.innerHTML = '<div class="version-empty">Поиск…</div>';
+
+  try {
+    const data = await api.modsSearch({
+      source: state.modsSource,
+      query,
+      gameVersion: state.modsVersion,
+      loader: state.modsLoader,
+      sort: state.modsSort,
+      offset: state.modsOffset,
+      limit: 20,
+    });
+    if (!data?.ok) throw new Error(data?.error || 'Не удалось выполнить поиск');
+    const mods = Array.isArray(data.mods) ? data.mods : [];
+    state.modsList = reset ? mods : state.modsList.concat(mods);
+    state.modsTotal = Number(data.total || state.modsList.length);
+    state.modsOffset = state.modsList.length;
+    state.modsHasMore = mods.length >= 20 && state.modsList.length < state.modsTotal;
+    renderModsGrid();
+    renderModsStatus(
+      state.modsList.length
+        ? `Найдено: ${state.modsTotal || state.modsList.length}`
+        : 'Ничего не найдено для выбранных фильтров.',
+      state.modsList.length ? 'ok' : 'empty',
+    );
+  } catch (error) {
+    state.modsError = error?.message || 'Не удалось выполнить поиск';
+    if (grid) grid.innerHTML = '';
+    renderModsStatus(state.modsError, 'error');
+    toast('Поиск модов не удался', state.modsError, 'error');
+  } finally {
+    state.modsLoading = false;
+    updateModsMoreButton();
+  }
+}
+
+async function installModFromCatalog(projectId) {
+  if (!projectId || state.modsLoading) return;
+  state.modsLoading = true;
+  try {
+    const result = await api.modsInstall({
+      source: state.modsSource,
+      projectId,
+      gameVersion: state.modsVersion,
+      loader: state.modsLoader,
+    });
+    if (!result?.ok) throw new Error(result?.error || 'Не удалось установить мод');
+    toast('Мод установлен', result.file || result.displayName || '');
+    await loadInstalledMods();
+  } catch (error) {
+    toast('Не удалось установить мод', error?.message || 'Неизвестная ошибка', 'error');
+  } finally {
+    state.modsLoading = false;
+  }
+}
+
+function renderInstalledMods() {
+  const container = $('#mods-installed');
+  if (!container) return;
+  const count = $('#mods-installed-count');
+  if (count) count.textContent = state.installedMods.length;
+  updateModsNavBadge();
+
+  if (!state.installedMods.length) {
+    container.innerHTML = '<div class="version-empty">Модов пока нет</div>';
+    return;
+  }
+  container.innerHTML = state.installedMods
+    .map((mod) => {
+      const title = mod.name || mod.baseName || mod.fileName;
+      const meta = [mod.version, mod.loader, formatBytes(mod.size)].filter(Boolean).join(' · ');
+      return `
+        <div class="installed-mod${mod.enabled ? '' : ' disabled'}">
+          <div class="installed-mod-info">
+            <strong>${escapeHtml(title)}</strong>
+            <small>${escapeHtml(meta || mod.fileName)}</small>
+          </div>
+          <div class="installed-mod-actions">
+            <button class="btn btn-ghost btn-sm" data-mod-toggle="${escapeHtml(mod.fileName)}" data-enabled="${mod.enabled ? '0' : '1'}">
+              ${mod.enabled ? 'Выключить' : 'Включить'}
+            </button>
+            <button class="icon-mini danger" data-mod-delete="${escapeHtml(mod.fileName)}" title="Удалить">
+              <svg><use href="#i-trash"/></svg>
+            </button>
+          </div>
+        </div>`;
+    })
+    .join('');
+}
+
+async function loadInstalledMods() {
+  try {
+    const result = await api.modsInstalled();
+    state.installedMods = result?.ok ? result.mods || [] : [];
+  } catch {
+    state.installedMods = [];
+  }
+  renderInstalledMods();
+}
+
+async function loadModsStatus() {
+  try {
+    const result = await api.modsStatus();
+    state.curseforgeKeySet = Boolean(result?.curseforgeKey);
+  } catch {
+    state.curseforgeKeySet = false;
+  }
+  updateModsKeyBanner();
+  updateModsSourceStates();
+}
+
+function initModsPage() {
+  populateModsVersionSelect();
+  loadModsStatus();
+  loadInstalledMods();
+  updateModsTarget();
+  updateModsSourceStates();
+  updateModsKeyBanner();
 }
 
 function openModsModal() {
@@ -1829,6 +2492,9 @@ async function handleAction(action, element) {
     case 'open-mods':
       await api.openFolder({ kind: 'mods' });
       break;
+    case 'open-mods-page':
+      navigate('mods');
+      break;
     case 'open-mods-menu':
       openModsModal();
       break;
@@ -1873,6 +2539,12 @@ function navigate(page) {
   $('#content').scrollTop = 0;
   if (page === 'versions') {
     loadVersions(false, true).catch(() => {});
+  }
+  if (page === 'mods') {
+    initModsPage();
+  }
+  if (page === 'skins') {
+    initSkinEditor();
   }
 }
 
@@ -1962,7 +2634,124 @@ function bindEvents() {
   $('#news-refresh').addEventListener('click', () => loadNews(true));
   $('#versions-refresh').addEventListener('click', () => loadVersions(true));
   $('#open-fabric').addEventListener('click', () => openLoaderModal('fabric'));
-  $('#open-mods').addEventListener('click', openModsModal);
+  $('#open-mods-page')?.addEventListener('click', () => navigate('mods'));
+
+  // skin editor
+  $$('.skins-tool-row [data-skin-tool]').forEach((button) => {
+    button.addEventListener('click', () => skinSetTool(button.dataset.skinTool));
+  });
+  $('#skin-color')?.addEventListener('input', (event) => {
+    state.skinColor = event.target.value;
+  });
+  $('#skin-zoom')?.addEventListener('input', (event) => {
+    state.skinZoom = Number(event.target.value) || 6;
+    updateSkinCanvasDisplay();
+  });
+  $('#skin-grid')?.addEventListener('change', (event) => {
+    state.skinGrid = event.target.checked;
+    updateSkinCanvasDisplay();
+  });
+  $('#skin-model')?.addEventListener('change', (event) => {
+    state.skinModel = event.target.value;
+    buildSkin3D();
+  });
+  $('#skin-template-steve')?.addEventListener('click', () => {
+    state.skinModel = 'classic';
+    $('#skin-model').value = 'classic';
+    skinDrawTemplate('classic');
+  });
+  $('#skin-template-alex')?.addEventListener('click', () => {
+    state.skinModel = 'slim';
+    $('#skin-model').value = 'slim';
+    skinDrawTemplate('slim');
+  });
+  $('#skin-open')?.addEventListener('click', () => $('#skin-file')?.click());
+  $('#skin-file')?.addEventListener('change', (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => skinLoadImage(String(reader.result || ''));
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  });
+  $('#skin-undo')?.addEventListener('click', skinUndo);
+  $('#skin-redo')?.addEventListener('click', skinRedo);
+  $('#skin-save')?.addEventListener('click', skinSavePng);
+  $('#skin-load-current')?.addEventListener('click', skinLoadCurrent);
+  $('#skin-upload')?.addEventListener('click', skinUpload);
+  const skinPreview = $('#skin-preview-3d');
+  if (skinPreview) {
+    skinPreview.style.cursor = 'grab';
+    skinPreview.addEventListener('mousedown', (event) => {
+      state.skinRotating = true;
+      state.skinRotStart = { x: event.clientX, y: event.clientY, rx: state.skinRotX, ry: state.skinRotY };
+      skinPreview.style.cursor = 'grabbing';
+    });
+  }
+  window.addEventListener('mousemove', (event) => {
+    if (!state.skinRotating || !state.skinRotStart) return;
+    const dx = event.clientX - state.skinRotStart.x;
+    const dy = event.clientY - state.skinRotStart.y;
+    state.skinRotX = state.skinRotStart.rx - dy * 0.5;
+    state.skinRotY = state.skinRotStart.ry + dx * 0.5;
+    const model = $('#skin-model3d');
+    if (model) model.style.transform = `rotateX(${state.skinRotX}deg) rotateY(${state.skinRotY}deg)`;
+  });
+  window.addEventListener('mouseup', () => {
+    if (state.skinRotating) {
+      state.skinRotating = false;
+      state.skinRotStart = null;
+      if (skinPreview) skinPreview.style.cursor = 'grab';
+    }
+  });
+
+  $('#skin-reset')?.addEventListener('click', () => {
+    const ctx = skinCtx();
+    if (!ctx) return;
+    ctx.clearRect(0, 0, skinCanvas().width, skinCanvas().height);
+    skinPushHistory();
+  });
+
+  const canvas = skinCanvas();
+  if (canvas) {
+    canvas.addEventListener('mousedown', (event) => {
+      state.skinDrawing = true;
+      const pixel = skinPixelFromEvent(event);
+      if (!pixel) return;
+      if (state.skinTool === 'picker') {
+        const ctx = skinCtx();
+        const data = ctx.getImageData(pixel.x, pixel.y, 1, 1).data;
+        if (data[3] === 0) return;
+        const hex = `#${[data[0], data[1], data[2]].map((value) => value.toString(16).padStart(2, '0')).join('')}`;
+        state.skinColor = hex;
+        const colorInput = $('#skin-color');
+        if (colorInput) colorInput.value = hex;
+        return;
+      }
+      skinPushHistory();
+      if (state.skinTool === 'fill') {
+        skinFloodFill(pixel.x, pixel.y, state.skinColor, state.skinTool === 'eraser');
+        state.skinDrawing = false;
+        return;
+      }
+      skinPaintPixel(pixel.x, pixel.y, state.skinColor, state.skinTool === 'eraser');
+      state.skinLastPixel = pixel;
+    });
+    canvas.addEventListener('mousemove', (event) => {
+      if (!state.skinDrawing) return;
+      const pixel = skinPixelFromEvent(event);
+      if (!pixel || (state.skinLastPixel && state.skinLastPixel.x === pixel.x && state.skinLastPixel.y === pixel.y)) return;
+      if (state.skinTool === 'brush' || state.skinTool === 'eraser') {
+        skinPaintPixel(pixel.x, pixel.y, state.skinColor, state.skinTool === 'eraser');
+        state.skinLastPixel = pixel;
+      }
+    });
+    window.addEventListener('mouseup', () => {
+      state.skinDrawing = false;
+      state.skinLastPixel = null;
+      updateSkin3DTexture();
+    });
+  }
   $('#cancel-install').addEventListener('click', () => handleAction('cancel-install', $('#cancel-install')));
 
   // version filters/search
@@ -1982,6 +2771,110 @@ function bindEvents() {
   $('#load-more').addEventListener('click', () => {
     state.visibleCount += 80;
     renderVersionsPage();
+  });
+
+  // mods page
+  $$('.mods-source').forEach((button) => {
+    button.addEventListener('click', () => {
+      setModsSource(button.dataset.modsSource);
+      updateModsKeyBanner();
+    });
+  });
+  $('#mods-search-btn')?.addEventListener('click', () => searchModsPage(true));
+  $('#mods-query')?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') searchModsPage(true);
+  });
+  $('#mods-version')?.addEventListener('change', (event) => {
+    state.modsVersion = event.target.value;
+    updateModsTarget();
+  });
+  $('#mods-loader')?.addEventListener('change', (event) => {
+    state.modsLoader = event.target.value;
+    updateModsTarget();
+  });
+  $('#mods-sort')?.addEventListener('change', (event) => {
+    state.modsSort = event.target.value;
+  });
+  $('#mods-more')?.addEventListener('click', () => searchModsPage(false));
+  $('#mods-open-folder')?.addEventListener('click', () => handleAction('open-mods', $('#mods-open-folder')));
+  $('#mods-refresh')?.addEventListener('click', async () => {
+    await Promise.all([loadModsStatus(), loadInstalledMods()]);
+    toast('Список модов обновлён', '', 'info', 2000);
+  });
+  $('#mods-installed-refresh')?.addEventListener('click', () => loadInstalledMods());
+  $('#mods-key-save')?.addEventListener('click', async () => {
+    const input = $('#mods-key-input');
+    const key = String(input?.value || '').trim();
+    if (!key) {
+      toast('Введите API-ключ', '', 'error');
+      return;
+    }
+    try {
+      await api.modsSetCurseForgeKey(key);
+      state.curseforgeKeySet = true;
+      if (input) input.value = '';
+      updateModsKeyBanner();
+      updateModsSourceStates();
+      toast('Ключ сохранён', 'CurseForge готов к поиску');
+    } catch (error) {
+      toast('Не удалось сохранить ключ', error?.message || 'Ошибка', 'error');
+    }
+  });
+  $('#mods-key-open')?.addEventListener('click', () =>
+    api.openExternal('https://console.curseforge.com/'),
+  );
+
+  document.addEventListener('click', async (event) => {
+    const openLink = event.target.closest('[data-mod-open]');
+    if (openLink) {
+      event.preventDefault();
+      api.openExternal(openLink.dataset.modOpen);
+      return;
+    }
+    const installButton = event.target.closest('[data-mod-install]');
+    if (installButton) {
+      event.preventDefault();
+      await installModFromCatalog(installButton.dataset.modProject);
+      return;
+    }
+    const toggleButton = event.target.closest('[data-mod-toggle]');
+    if (toggleButton) {
+      event.preventDefault();
+      const fileName = toggleButton.dataset.modToggle;
+      const enabled = toggleButton.dataset.enabled === '1';
+      await (async () => {
+        try {
+          const result = await api.modsToggle(fileName, enabled);
+          if (!result?.ok) throw new Error(result?.error || 'Не удалось переключить мод');
+          state.installedMods = result.mods || state.installedMods;
+          renderInstalledMods();
+        } catch (error) {
+          toast('Не удалось переключить мод', error?.message || 'Ошибка', 'error');
+        }
+      })();
+      return;
+    }
+    const deleteButton = event.target.closest('[data-mod-delete]');
+    if (deleteButton) {
+      event.preventDefault();
+      const fileName = deleteButton.dataset.modDelete;
+      openConfirm({
+        title: 'Удалить мод?',
+        text: `Файл <strong>${escapeHtml(fileName)}</strong> будет удалён из папки mods.`,
+        confirmLabel: 'Удалить',
+        onConfirm: async () => {
+          try {
+            const result = await api.modsDelete(fileName);
+            if (!result?.ok) throw new Error(result?.error || 'Не удалось удалить мод');
+            state.installedMods = result.mods || state.installedMods;
+            renderInstalledMods();
+            toast('Мод удалён', fileName);
+          } catch (error) {
+            toast('Не удалось удалить мод', error?.message || 'Ошибка', 'error');
+          }
+        },
+      });
+    }
   });
 
   // settings - memory
@@ -2253,6 +3146,8 @@ async function boot() {
     loadVersions();
     loadNews();
     detectJava({ silent: true });
+    loadInstalledMods();
+    loadModsStatus();
   } catch (error) {
     showFatal(error);
   }

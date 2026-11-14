@@ -89,6 +89,13 @@
             <svg><use href="#i-cube"/></svg><span>Версии</span>
             <span class="nav-badge" id="nav-installed">0</span>
           </button>
+          <button class="nav-item" data-page="mods">
+            <svg><use href="#i-mod"/></svg><span>Моды</span>
+            <span class="nav-badge" id="nav-mods">0</span>
+          </button>
+          <button class="nav-item" data-page="skins">
+            <svg><use href="#i-user"/></svg><span>Скины</span>
+          </button>
           <button class="nav-item" data-page="settings">
             <svg><use href="#i-gear"/></svg><span>Настройки</span>
           </button>
@@ -229,9 +236,9 @@
                 <span class="quick-text"><strong>Папка mods</strong><small>Моды и ресурспаки</small></span>
                 <svg class="quick-arrow"><use href="#i-arrow"/></svg>
               </button>
-              <button class="quick-card" data-action="open-mods-menu">
+              <button class="quick-card" data-action="open-mods-page">
                 <span class="quick-icon"><svg><use href="#i-mod"/></svg></span>
-                <span class="quick-text"><strong>Меню модов</strong><small>Forge и Modrinth</small></span>
+                <span class="quick-text"><strong>Моды</strong><small>Modrinth и CurseForge</small></span>
                 <svg class="quick-arrow"><use href="#i-arrow"/></svg>
               </button>
             </aside>
@@ -260,8 +267,8 @@
             <button class="btn btn-primary" id="open-fabric">
               <svg><use href="#i-plus"/></svg> Установить модлоадер
             </button>
-            <button class="btn btn-ghost" id="open-mods">
-              <svg><use href="#i-mod"/></svg> Меню модов
+            <button class="btn btn-ghost" id="open-mods-page">
+              <svg><use href="#i-mod"/></svg> Моды
             </button>
           </div>
 
@@ -313,6 +320,235 @@
               <button class="btn btn-ghost" id="load-more" hidden>Показать ещё</button>
             </div>
           </section>
+        </section>
+
+        <!-- ================= MODS ================= -->
+        <section class="page" data-page="mods">
+          <div class="page-head mods-head">
+            <div>
+              <p class="eyebrow"><span class="live-dot violet"></span> Мастерская</p>
+              <h1 class="page-title">Моды</h1>
+              <p class="page-sub">Каталог Modrinth и CurseForge, установка в один клик и управление папкой <code>mods</code>.</p>
+            </div>
+            <div class="head-actions">
+              <button class="icon-btn" id="mods-refresh" title="Обновить каталог">
+                <svg><use href="#i-refresh"/></svg>
+              </button>
+              <button class="btn btn-ghost" id="mods-open-folder">
+                <svg><use href="#i-folder"/></svg> Папка mods
+              </button>
+            </div>
+          </div>
+
+          <div class="mods-layout">
+            <div class="mods-main">
+              <div class="mods-sources" id="mods-sources" role="tablist" aria-label="Источник модов">
+                <button class="mods-source active" data-mods-source="modrinth" role="tab" aria-selected="true">
+                  <span class="mods-source-mark modrinth">MR</span>
+                  <span class="mods-source-text">
+                    <strong>Modrinth</strong>
+                    <small>Открытый каталог · без ключа</small>
+                  </span>
+                  <span class="mods-source-state" data-source-state="modrinth"></span>
+                </button>
+                <button class="mods-source" data-mods-source="curseforge" role="tab" aria-selected="false">
+                  <span class="mods-source-mark curseforge">CF</span>
+                  <span class="mods-source-text">
+                    <strong>CurseForge</strong>
+                    <small>Крупнейший каталог · API-ключ</small>
+                  </span>
+                  <span class="mods-source-state" data-source-state="curseforge"></span>
+                </button>
+              </div>
+
+              <div class="mods-search-row">
+                <label class="search-box mods-search">
+                  <svg><use href="#i-search"/></svg>
+                  <input id="mods-query" type="text" placeholder="Найти мод: JEI, Create, Sodium…" autocomplete="off" />
+                </label>
+                <button class="btn btn-primary" id="mods-search-btn">
+                  <svg><use href="#i-search"/></svg> Найти
+                </button>
+              </div>
+
+              <div class="mods-filters">
+                <label class="mods-filter">
+                  <span>Версия игры</span>
+                  <select id="mods-version"></select>
+                </label>
+                <label class="mods-filter">
+                  <span>Загрузчик</span>
+                  <select id="mods-loader">
+                    <option value="">Любой</option>
+                    <option value="fabric">Fabric</option>
+                    <option value="forge">Forge</option>
+                    <option value="neoforge">NeoForge</option>
+                    <option value="quilt">Quilt</option>
+                  </select>
+                </label>
+                <label class="mods-filter">
+                  <span>Сортировка</span>
+                  <select id="mods-sort">
+                    <option value="relevance">По релевантности</option>
+                    <option value="downloads">По скачиваниям</option>
+                    <option value="newest">Новые</option>
+                    <option value="updated">Обновлённые</option>
+                  </select>
+                </label>
+                <div class="mods-target" id="mods-target"></div>
+              </div>
+
+              <div class="mods-key-banner" id="mods-key-banner" hidden>
+                <div class="mods-key-copy">
+                  <strong><svg><use href="#i-warning"/></svg> CurseForge требует API-ключ</strong>
+                  <p>
+                    Каталог CurseForge не работает без ключа. Получите бесплатный ключ в консоли CurseForge
+                    и вставьте его сюда — он сохранится только на этом компьютере.
+                  </p>
+                </div>
+                <div class="mods-key-form">
+                  <input id="mods-key-input" type="text" placeholder="Вставьте API-ключ" autocomplete="off" spellcheck="false" />
+                  <button class="btn btn-primary btn-sm" id="mods-key-save">Сохранить</button>
+                  <button class="link-btn" id="mods-key-open">Получить ключ <svg><use href="#i-external"/></svg></button>
+                </div>
+              </div>
+
+              <div class="mods-status" id="mods-status"></div>
+              <div class="mods-grid" id="mods-grid"></div>
+              <div class="list-footer">
+                <button class="btn btn-ghost" id="mods-more" hidden>Показать ещё</button>
+              </div>
+            </div>
+
+            <aside class="mods-side">
+              <section class="settings-card mods-installed-card">
+                <div class="card-head">
+                  <h3><svg><use href="#i-mod"/></svg> Установлено <span class="count-pill" id="mods-installed-count">0</span></h3>
+                  <button class="icon-btn tiny" id="mods-installed-refresh" title="Обновить список">
+                    <svg><use href="#i-refresh"/></svg>
+                  </button>
+                </div>
+                <div class="mods-installed" id="mods-installed"></div>
+                <p class="hint">Отключённые моды переименованы в <code>.jar.disabled</code> и не загружаются игрой.</p>
+              </section>
+
+              <section class="settings-card mods-tip-card">
+                <div class="card-head">
+                  <h3><svg><use href="#i-sparkles"/></svg> Как это работает</h3>
+                </div>
+                <ul class="mods-tips">
+                  <li>Выберите версию и загрузчик — каталог покажет только совместимые моды.</li>
+                  <li>Нажмите «Установить» — JAR сразу попадёт в папку <code>mods</code>.</li>
+                  <li>Для Forge и NeoForge сначала установите сам загрузчик на странице «Версии».</li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ================= SKINS ================= -->
+        <section class="page" data-page="skins">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow"><span class="live-dot violet"></span> Внешний вид</p>
+              <h1 class="page-title">Редактор скинов</h1>
+              <p class="page-sub">Рисуйте пиксель-арт 64×64, сохраняйте PNG и загружайте скин на лицензионный аккаунт.</p>
+            </div>
+            <div class="head-actions">
+              <button class="btn btn-ghost" id="skin-reset">Сбросить</button>
+            </div>
+          </div>
+
+          <div class="skins-layout">
+            <div class="skins-editor-card">
+              <div class="skins-canvas-wrap">
+                <canvas id="skin-canvas" width="64" height="64"></canvas>
+              </div>
+              <div class="skins-tools">
+                <div class="skins-tool-row">
+                  <button class="btn btn-ghost btn-sm active" data-skin-tool="brush">Кисть</button>
+                  <button class="btn btn-ghost btn-sm" data-skin-tool="eraser">Ластик</button>
+                  <button class="btn btn-ghost btn-sm" data-skin-tool="fill">Заливка</button>
+                  <button class="btn btn-ghost btn-sm" data-skin-tool="picker">Пипетка</button>
+                </div>
+                <div class="skins-tool-row">
+                  <label class="skins-color">
+                    <span>Цвет</span>
+                    <input type="color" id="skin-color" value="#c9a07a" />
+                  </label>
+                  <label class="skins-zoom">
+                    <span>Масштаб</span>
+                    <input type="range" id="skin-zoom" min="4" max="12" value="6" />
+                  </label>
+                  <label class="switch-row compact">
+                    <span><strong>Сетка</strong></span>
+                    <input type="checkbox" id="skin-grid" checked />
+                    <span class="switch"></span>
+                  </label>
+                </div>
+                <div class="skins-tool-row">
+                  <button class="btn btn-ghost btn-sm" id="skin-template-steve">Шаблон Steve</button>
+                  <button class="btn btn-ghost btn-sm" id="skin-template-alex">Шаблон Alex</button>
+                  <button class="btn btn-ghost btn-sm" id="skin-open">Открыть PNG</button>
+                  <input type="file" id="skin-file" accept="image/png,image/*" hidden />
+                </div>
+              </div>
+            </div>
+
+            <aside class="skins-side">
+              <section class="settings-card">
+                <div class="card-head">
+                  <h3><svg><use href="#i-user"/></svg> Модель</h3>
+                </div>
+                <label class="field">
+                  <label class="field-label" for="skin-model">Тип скина</label>
+                  <select id="skin-model">
+                    <option value="classic">Classic (Steve)</option>
+                    <option value="slim">Slim (Alex)</option>
+                  </select>
+                </label>
+                <p class="hint">Slim использует узкие рукава.</p>
+              </section>
+
+              <section class="settings-card">
+                <div class="card-head">
+                  <h3><svg><use href="#i-cube"/></svg> 3D-просмотр</h3>
+                </div>
+                <div class="skin-preview-3d" id="skin-preview-3d">
+                  <div class="skin-model3d" id="skin-model3d"></div>
+                </div>
+                <p class="hint">Предпросмотр обновляется при рисовании.</p>
+              </section>
+
+              <section class="settings-card">
+                <div class="card-head">
+                  <h3><svg><use href="#i-sparkles"/></svg> Действия</h3>
+                </div>
+                <div class="row-gap">
+                  <button class="btn btn-ghost btn-sm" id="skin-undo">Отменить</button>
+                  <button class="btn btn-ghost btn-sm" id="skin-redo">Повторить</button>
+                </div>
+                <div class="row-gap">
+                  <button class="btn btn-primary btn-sm" id="skin-save">Скачать PNG</button>
+                  <button class="btn btn-primary btn-sm" id="skin-load-current">Загрузить текущий</button>
+                </div>
+                <button class="btn btn-primary" id="skin-upload">Загрузить на аккаунт</button>
+                <p class="hint" id="skin-status">Выберите лицензионный аккаунт, чтобы загрузить скин.</p>
+              </section>
+
+              <section class="settings-card">
+                <div class="card-head">
+                  <h3><svg><use href="#i-mod"/></svg> Подсказки</h3>
+                </div>
+                <ul class="mods-tips">
+                  <li>Скин должен быть PNG размером 64×64 (или 64×32).</li>
+                  <li>Кисть рисует, ластик делает пиксели прозрачными.</li>
+                  <li>Заливка заполняет связанные пиксели того же цвета.</li>
+                  <li>Загрузка на аккаунт использует официальный API Minecraft.</li>
+                </ul>
+              </section>
+            </aside>
+          </div>
         </section>
 
         <!-- ================= SETTINGS ================= -->

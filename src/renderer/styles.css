@@ -2908,6 +2908,403 @@ select option {
   display: none;
 }
 
+/* ---------- mods page ---------- */
+.mods-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+}
+.mods-main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.mods-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mods-sources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.mods-source {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.025);
+  text-align: left;
+  transition: 0.16s ease;
+}
+.mods-source:hover {
+  border-color: var(--stroke-strong);
+  background: rgba(255, 255, 255, 0.04);
+}
+.mods-source.active {
+  border-color: rgba(168, 245, 106, 0.35);
+  background: rgba(168, 245, 106, 0.06);
+}
+.mods-source-mark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #0b0d07;
+}
+.mods-source-mark.modrinth {
+  background: linear-gradient(135deg, var(--lime), #d8ff9e);
+}
+.mods-source-mark.curseforge {
+  background: linear-gradient(135deg, var(--amber), #ffd99a);
+}
+.mods-source-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.mods-source-text strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+.mods-source-text small {
+  font-size: 10px;
+  color: var(--muted-2);
+}
+.mods-source-state {
+  margin-left: auto;
+  font-size: 9.5px;
+  color: var(--muted-2);
+  font-weight: 700;
+}
+.mods-source-state.warn {
+  color: var(--amber);
+}
+.mods-search-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.mods-search {
+  flex: 1;
+}
+.mods-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+.mods-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.mods-filter select {
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+}
+.mods-target {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 10.5px;
+  color: var(--muted-2);
+  padding-bottom: 8px;
+}
+.mods-target strong {
+  color: var(--text);
+}
+.mods-key-banner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 193, 94, 0.25);
+  background: rgba(255, 193, 94, 0.06);
+}
+.mods-key-copy strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.mods-key-copy p {
+  margin: 4px 0 0;
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.mods-key-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.mods-key-form input {
+  width: 260px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+.mods-status {
+  font-size: 11px;
+  color: var(--muted-2);
+  min-height: 16px;
+}
+.mods-status.error {
+  color: var(--red);
+}
+.mods-status.ok {
+  color: var(--lime);
+}
+.mods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.mods-grid .mod-card {
+  flex-direction: column;
+  gap: 10px;
+}
+.mods-grid .mod-card-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.mods-grid .mod-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex: none;
+  background: rgba(255, 255, 255, 0.04);
+}
+.mods-grid .mod-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.mods-grid .mod-card-title strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+.mods-grid .mod-card-title small {
+  font-size: 10px;
+  color: var(--muted-2);
+}
+.mods-grid .mod-desc {
+  margin: 0;
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.mods-grid .mod-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mods-grid .mod-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.mods-installed-card .mods-installed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow: auto;
+}
+.installed-mod {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.02);
+}
+.installed-mod.disabled {
+  opacity: 0.55;
+}
+.installed-mod-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.installed-mod-info strong {
+  font-size: 12px;
+  font-weight: 800;
+}
+.installed-mod-info small {
+  font-size: 10px;
+  color: var(--muted-2);
+}
+.installed-mod-actions {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+.installed-mod-actions .btn {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 10px;
+}
+@media (max-width: 1180px) {
+  .mods-layout {
+    grid-template-columns: 1fr;
+  }
+  .mods-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mods-key-banner {
+    grid-template-columns: 1fr;
+  }
+  .mods-key-form input {
+    width: 100%;
+  }
+}
+
+/* ---------- skin editor ---------- */
+.skins-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+.skins-editor-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.025);
+}
+.skins-canvas-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--stroke);
+}
+#skin-canvas {
+  width: 384px;
+  height: 384px;
+  image-rendering: pixelated;
+  cursor: crosshair;
+  border: 1px solid var(--stroke-strong);
+  background:
+    linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.06) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.06) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}
+#skin-canvas.show-grid {
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+.skins-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.skins-tool-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.skins-tool-row .btn.active {
+  background: linear-gradient(135deg, var(--lime), #d8ff9e);
+  color: #0b0d07;
+}
+.skins-color, .skins-zoom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.skins-color input[type='color'] {
+  width: 34px;
+  height: 30px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.skins-zoom input[type='range'] {
+  width: 120px;
+}
+.switch-row.compact {
+  padding: 0;
+}
+@media (max-width: 1180px) {
+  .skins-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skin-preview-3d {
+  perspective: 1100px;
+  width: 100%;
+  min-height: 420px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  user-select: none;
+}
+.skin-model3d {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(-18deg) rotateY(32deg);
+}
+.skin-part {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+.skin-face {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: calc(var(--face-w, 0px) / -2);
+  margin-top: calc(var(--face-h, 0px) / -2);
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  backface-visibility: hidden;
+  background-image: var(--skin-texture);
+}
+
 /* ---------- toast ---------- */
 .toast-root {
   position: fixed;

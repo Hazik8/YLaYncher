@@ -30,7 +30,8 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.ico",
+      "artifactName": "Y.LaYncher.Setup.exe"
     },
     "nsis": {
       "oneClick": false,

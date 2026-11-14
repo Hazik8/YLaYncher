@@ -33,6 +33,15 @@ contextBridge.exposeInMainWorld('api', {
 
   modsSearch: (payload) => ipcRenderer.invoke('mods:search', payload),
   modsInstall: (payload) => ipcRenderer.invoke('mods:install', payload),
+  modsInstalled: () => ipcRenderer.invoke('mods:installed'),
+  modsDelete: (fileName) => ipcRenderer.invoke('mods:delete', { fileName }),
+  modsToggle: (fileName, enabled) => ipcRenderer.invoke('mods:toggle', { fileName, enabled }),
+  modsOpenFolder: () => ipcRenderer.invoke('mods:open-folder'),
+  modsStatus: () => ipcRenderer.invoke('mods:status'),
+  modsSetCurseForgeKey: (key) => ipcRenderer.invoke('mods:set-curseforge-key', { key }),
+
+  skinsCurrent: () => ipcRenderer.invoke('skins:current'),
+  skinsUpload: (payload) => ipcRenderer.invoke('skins:upload', payload),
 
   launch: (versionId) => ipcRenderer.invoke('game:launch', { versionId }),
   stopGame: () => ipcRenderer.invoke('game:stop'),

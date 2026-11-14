@@ -1,19 +1,8 @@
 name: Deploy website
 
 on:
-  push:
-    branches:
-      - main
-      - master
-    paths:
-      - 'site/**'
-      - 'scripts/build-site.mjs'
-      - '.github/workflows/pages.yml'
-  release:
-    types:
-      - published
-      - edited
-      - deleted
+  # Автозапуск отключён: сайт публикуется только вручную —
+  # Actions → Deploy website → Run workflow.
   workflow_dispatch:
 
 permissions:
@@ -28,6 +17,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Пустая строка, если секрет PAGES_PAT не задан.
+      PAGES_PAT: ${{ secrets.PAGES_PAT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,6 +38,17 @@ jobs:
           YL_SITE_URL: ${{ vars.YL_SITE_URL }}
         run: node scripts/build-site.mjs
 
+      - name: Check that Pages is enabled
+        # Если есть PAGES_PAT, сайт Pages создастся на следующем шаге сам.
+        if: env.PAGES_PAT == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh api "repos/${GITHUB_REPOSITORY}/pages" > /dev/null 2>&1; then
+            echo "::error title=GitHub Pages не включены::Откройте Settings → Pages → Build and deployment → Source: GitHub Actions и запустите workflow снова."
+            exit 1
+          fi
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
@@ -53,7 +56,7 @@ jobs:
           # автоматическое включение только для PAT или GitHub App.
           # Поэтому Pages нужно один раз включить вручную:
           # Settings → Pages → Build and deployment → Source: GitHub Actions.
-          # Если добавить секрет PAGES_PAT (PAT с правом Pages: write),
+          # Если добавить секрет PAGES_PAT (classic PAT со scope `repo`),
           # workflow включит Pages сам.
           token: ${{ secrets.PAGES_PAT || github.token }}
           enablement: ${{ secrets.PAGES_PAT != '' }}

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Y LaYncher — лаунчер Minecraft Java Edition</title>
-  <meta name="description" content="Y LaYncher — красивый и быстрый лаунчер Minecraft: Java Edition. Любые версии, Fabric, Forge, OptiFine, вход через Microsoft и автоматическая Java. Бесплатно для Windows." />
+  <meta name="description" content="Y LaYncher — красивый и быстрый лаунчер Minecraft: Java Edition. Любые версии, Fabric, Forge, NeoForge, OptiFine, каталог модов Modrinth и CurseForge, редактор скинов, вход через Microsoft и автоматическая Java. Бесплатно для Windows." />
   <meta name="theme-color" content="#06070b" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Y LaYncher — лаунчер Minecraft Java Edition" />
@@ -47,6 +47,7 @@
     <symbol id="i-chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/><path d="M9.5 9.5h5v5h-5zM9.5 2.5v3.5M14.5 2.5v3.5M9.5 18v3.5M14.5 18v3.5M2.5 9.5H6M2.5 14.5H6M18 9.5h3.5M18 14.5h3.5"/></symbol>
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 2 8 4v5c0 5.2-3.4 9.4-8 11-4.6-1.6-8-5.8-8-11V6Z"/><path d="m8.8 12 2.2 2.2 4.4-4.4"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+    <symbol id="i-mod" viewBox="0 0 24 24"><path d="m12 2 8 4v5c0 5.2-3.4 9.4-8 11-4.6-1.6-8-5.8-8-11V6Z"/><path d="M9 12h6M12 9v6"/></symbol>
     <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="2.8" y="4" width="18.4" height="16" rx="3"/><path d="m7 9 3 3-3 3M12.5 15H17"/></symbol>
     <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3.5 13.8 9l5.5 1.8-5.5 1.8L12 18l-1.8-5.4L4.7 10.8 10.2 9Z"/><path d="M19 16.5v3.2M17.4 18.1h3.2"/></symbol>
     <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2.5"/><path d="M9 21h6M12 17v4"/></symbol>
@@ -101,7 +102,8 @@
         <h1>Лаунчер, который<br /><span class="grad-text">просто работает.</span></h1>
         <p class="lead">
           Y LaYncher ставит любые версии Minecraft, Fabric, Forge и OptiFine, сам находит Java
-          и держит ваши миры в порядке. Без лишних кнопок и сложных настроек.
+           ищет моды в Modrinth и CurseForge, редактирует и загружает скины,
+           и держит ваши миры в порядке. Без лишних кнопок и сложных настроек.
         </p>
 
         <div class="hero-actions">
@@ -151,6 +153,8 @@
               <div class="lw-nav">
                 <span class="active"><svg><use href="#i-home"/></svg> Главная</span>
                 <span><svg><use href="#i-cube"/></svg> Версии <b>12</b></span>
+                <span><svg><use href="#i-mod"/></svg> Моды <b>24</b></span>
+                <span><svg><use href="#i-user"/></svg> Скины</span>
                 <span><svg><use href="#i-gear"/></svg> Настройки</span>
               </div>
 
@@ -209,8 +213,8 @@
     <!-- ================= MARQUEE ================= -->
     <div class="marquee" aria-hidden="true">
       <div class="marquee-track">
-        <span>Vanilla</span><b>◆</b><span>Fabric</span><b>◆</b><span>Forge</span><b>◆</b><span>OptiFine</span><b>◆</b><span>Microsoft</span><b>◆</b><span>Java 8–21</span><b>◆</b><span>Windows 10/11</span><b>◆</b>
-        <span>Vanilla</span><b>◆</b><span>Fabric</span><b>◆</b><span>Forge</span><b>◆</b><span>OptiFine</span><b>◆</b><span>Microsoft</span><b>◆</b><span>Java 8–21</span><b>◆</b><span>Windows 10/11</span><b>◆</b>
+        <span>Vanilla</span><b>◆</b><span>Fabric</span><b>◆</b><span>Forge</span><b>◆</b><span>NeoForge</span><b>◆</b><span>OptiFine</span><b>◆</b><span>Modrinth</span><b>◆</b><span>CurseForge</span><b>◆</b><span>Скины</span><b>◆</b><span>Microsoft</span><b>◆</b><span>Java 8–21</span><b>◆</b><span>Windows 10/11</span><b>◆</b>
+        <span>Vanilla</span><b>◆</b><span>Fabric</span><b>◆</b><span>Forge</span><b>◆</b><span>NeoForge</span><b>◆</b><span>OptiFine</span><b>◆</b><span>Modrinth</span><b>◆</b><span>CurseForge</span><b>◆</b><span>Скины</span><b>◆</b><span>Microsoft</span><b>◆</b><span>Java 8–21</span><b>◆</b><span>Windows 10/11</span><b>◆</b>
       </div>
     </div>
 
@@ -261,6 +265,19 @@
           <h3>Настройки, которые не мешают</h3>
           <p>Память, разрешение, полный экран, JVM-аргументы и папка игры сохраняются автоматически. Офлайн-аккаунт с ником и стабильным UUID — для одиночной игры и серверов без проверки лицензии.</p>
           <div class="feature-chips"><span>4–8 ГБ RAM</span><span>Fullscreen</span><span>JVM args</span><span>Offline</span></div>
+        </article>
+
+        <article class="feature-card feature-wide">
+          <div class="feature-icon violet"><svg><use href="#i-mod"/></svg></div>
+          <h3>Каталог модов Modrinth и CurseForge</h3>
+          <p>Поиск, фильтры по версии и загрузчику, установка в один клик и управление папкой mods: включение, выключение и удаление.</p>
+          <div class="feature-chips"><span>Modrinth</span><span>CurseForge</span><span>Fabric</span><span>Forge</span><span>NeoForge</span></div>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon cyan"><svg><use href="#i-user"/></svg></div>
+          <h3>Редактор скинов</h3>
+          <p>Пиксель-арт 64×64, кисть, ластик, заливка, 3D-просмотр и загрузка скина на лицензионный аккаунт.</p>
         </article>
       </div>
     </section>
@@ -375,7 +392,7 @@
 
           <details class="faq-item">
             <summary>Можно ли играть с модами?<svg><use href="#i-chevron"/></svg></summary>
-            <p>Да. Установите Fabric, Forge или OptiFine, затем положите моды в папку <code>mods</code> — лаунчер умеет открывать её одной кнопкой. Менеджера модов внутри нет: это осознанно простая установка.</p>
+            <p>Да. Установите Fabric, Forge, NeoForge или Quilt, затем ищите и ставьте моды прямо в лаунчере через Modrinth и CurseForge — они сразу попадают в папку <code>mods</code>. Можно включать, выключать и удалять моды без ручной возни с файлами.</p>
           </details>
 
           <details class="faq-item">

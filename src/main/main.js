@@ -29,7 +29,16 @@ const {
 } = require('./lib/mojang');
 const game = require('./lib/launcher');
 const microsoft = require('./lib/microsoft');
-const { searchModrinth, installModrinthMod } = require('./lib/mods');
+const {
+  modsDirOf,
+  searchModrinth,
+  installModrinthMod,
+  searchCurseForge,
+  installCurseForgeMod,
+  listInstalledMods,
+  deleteInstalledMod,
+  setModEnabled,
+} = require('./lib/mods');
 
 let mainWindow = null;
 let store = null;
@@ -357,25 +366,136 @@ function registerIpc() {
     return [];
   });
 
+  ipcMain.handle('mods:status', () => ({
+    curseforgeKey: Boolean(store.getSettings().curseforgeApiKey),
+  }));
+
+  ipcMain.handle('mods:set-curseforge-key', (_event, { key } = {}) => {
+    const value = String(key || '').trim();
+    store.patchSettings({ curseforgeApiKey: value });
+    return { ok: true, curseforgeKey: Boolean(value) };
+  });
+
   ipcMain.handle('mods:search', async (_event, payload = {}) => {
-    const data = await searchModrinth({
+    const source = payload.source === 'curseforge' ? 'curseforge' : 'modrinth';
+    const options = {
       query: String(payload.query || ''),
       gameVersion: String(payload.gameVersion || ''),
       loader: payload.loader ? String(payload.loader) : '',
+      offset: Number(payload.offset) || 0,
       limit: Number(payload.limit) || 20,
-    });
-    return data;
+      sort: String(payload.sort || 'relevance'),
+    };
+
+    try {
+      const data =
+        source === 'curseforge'
+          ? await searchCurseForge({ ...options, apiKey: store.getSettings().curseforgeApiKey })
+          : await searchModrinth(options);
+      return { ok: true, ...data };
+    } catch (error) {
+      return {
+        ok: false,
+        code: error?.code || 'MODS_SEARCH_FAILED',
+        error: error?.message || 'Не удалось выполнить поиск',
+      };
+    }
   });
 
   ipcMain.handle('mods:install', async (_event, payload = {}) => {
-    const result = await installModrinthMod({
+    const source = payload.source === 'curseforge' ? 'curseforge' : 'modrinth';
+    const options = {
       projectId: String(payload.projectId || ''),
       gameVersion: String(payload.gameVersion || ''),
       loader: payload.loader ? String(payload.loader) : '',
-      modsDir: store.gameDir(),
+      gameDir: store.gameDir(),
       isCancelled: () => false,
-    });
-    return result;
+    };
+
+    try {
+      const result =
+        source === 'curseforge'
+          ? await installCurseForgeMod({ ...options, apiKey: store.getSettings().curseforgeApiKey })
+          : await installModrinthMod(options);
+      return { ok: true, ...result };
+    } catch (error) {
+      return {
+        ok: false,
+        code: error?.code || 'MODS_INSTALL_FAILED',
+        error: error?.message || 'Не удалось установить мод',
+      };
+    }
+  });
+
+  ipcMain.handle('mods:installed', async () => {
+    try {
+      return { ok: true, mods: await listInstalledMods(store.gameDir()) };
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Не удалось прочитать папку mods', mods: [] };
+    }
+  });
+
+  ipcMain.handle('mods:delete', async (_event, { fileName } = {}) => {
+    try {
+      return { ok: true, mods: await deleteInstalledMod(store.gameDir(), fileName) };
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Не удалось удалить мод', mods: [] };
+    }
+  });
+
+  ipcMain.handle('mods:toggle', async (_event, { fileName, enabled } = {}) => {
+    try {
+      return { ok: true, mods: await setModEnabled(store.gameDir(), fileName, Boolean(enabled)) };
+    } catch (error) {
+      return { ok: false, error: error?.message || 'Не удалось переключить мод', mods: [] };
+    }
+  });
+
+  ipcMain.handle('mods:open-folder', () => openPath(modsDirOf(store.gameDir())));
+
+  ipcMain.handle('skins:current', async () => {
+    const account = store.getSelectedAccount();
+    if (!account || account.type !== 'microsoft') {
+      return { ok: false, code: 'ACCOUNT_REQUIRED', error: 'Для редактора скинов нужен лицензионный Microsoft-аккаунт.' };
+    }
+    try {
+      let auth = store.getAccountAuth(account);
+      const session = await microsoft.ensureSession({ auth, onStatus: () => {} });
+      if (session.auth) {
+        auth = session.auth;
+        store.setAccountAuth(account.id, auth);
+      }
+      if (session.profile) store.updateMicrosoftProfile(account.id, session.profile);
+      const skin = await microsoft.fetchCurrentSkin(auth);
+      return { ok: true, ...skin, account: store.publicAccount(store.getAccount(account.id)) };
+    } catch (error) {
+      return { ok: false, code: error?.code || 'SKIN_FETCH_FAILED', error: error?.message || 'Не удалось получить скин' };
+    }
+  });
+
+  ipcMain.handle('skins:upload', async (_event, { pngDataUrl, variant } = {}) => {
+    const account = store.getSelectedAccount();
+    if (!account || account.type !== 'microsoft') {
+      return { ok: false, code: 'ACCOUNT_REQUIRED', error: 'Для загрузки скина нужен лицензионный Microsoft-аккаунт.' };
+    }
+    const base64 = String(pngDataUrl || '').replace(/^data:image\/[a-zA-Z]+;base64,/, '');
+    if (!base64) return { ok: false, code: 'NO_IMAGE', error: 'Пустое изображение скина' };
+    const buffer = Buffer.from(base64, 'base64');
+    if (!buffer.length) return { ok: false, code: 'NO_IMAGE', error: 'Пустое изображение скина' };
+    try {
+      let auth = store.getAccountAuth(account);
+      const session = await microsoft.ensureSession({ auth, onStatus: () => {} });
+      if (session.auth) {
+        auth = session.auth;
+        store.setAccountAuth(account.id, auth);
+      }
+      if (session.profile) store.updateMicrosoftProfile(account.id, session.profile);
+      const result = await microsoft.uploadSkin(auth, buffer, variant);
+      if (result?.profile) store.updateMicrosoftProfile(account.id, result.profile);
+      return { ok: true, profile: result?.profile || null };
+    } catch (error) {
+      return { ok: false, code: error?.code || 'SKIN_UPLOAD_FAILED', error: error?.message || 'Не удалось загрузить скин' };
+    }
   });
 
   ipcMain.handle('game:launch', async (_event, { versionId }) => {

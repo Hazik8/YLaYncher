@@ -62,6 +62,7 @@ function createDefaults() {
       closeOnLaunch: false,
       showConsole: true,
       selectedVersion: 'latest-release',
+      curseforgeApiKey: '',
     },
     accounts: [],
     selectedAccountId: null,
@@ -132,8 +133,12 @@ class Store {
   }
 
   publicConfig() {
+    // Never expose the CurseForge API key to the renderer/DOM.
+    const settings = { ...this.data.settings };
+    delete settings.curseforgeApiKey;
     return {
       ...this.data,
+      settings,
       accounts: this.data.accounts.map((account) => this.publicAccount(account)),
     };
   }
@@ -155,6 +160,7 @@ class Store {
       'closeOnLaunch',
       'showConsole',
       'selectedVersion',
+      'curseforgeApiKey',
     ];
     for (const key of allowed) {
       if (Object.prototype.hasOwnProperty.call(patch, key)) {
