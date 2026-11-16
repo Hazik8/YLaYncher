@@ -354,21 +354,25 @@ function detectLoaderType(meta, versionId = '') {
   const libraries = Array.isArray(meta?.libraries) ? meta.libraries : [];
   const names = libraries.map((lib) => String(lib?.name || ''));
 
-  if (
-    meta?.fabric ||
-    /^fabric-loader-/i.test(id) ||
-    /fabric/i.test(mainClass) ||
-    names.some((name) => /^net\.fabricmc:/i.test(name))
-  ) {
-    return 'fabric';
-  }
-
+  // NeoForge goes first: modern builds ship `net.fabricmc:sponge-mixin` and
+  // `net.minecraftforge:srgutils`, so a generic group check would misclassify
+  // them as Fabric or Forge.
   if (
     /neoforge/i.test(id) ||
     /neoforge/i.test(mainClass) ||
-    names.some((name) => /^net\.neoforged:/i.test(name))
+    /^net\.neoforged[.:]/i.test(mainClass) ||
+    names.some((name) => /^net\.neoforged[.:]/i.test(name))
   ) {
     return 'neoforge';
+  }
+
+  if (
+    meta?.fabric ||
+    /^fabric-loader-/i.test(id) ||
+    /net\.fabricmc\.loader/i.test(mainClass) ||
+    names.some((name) => /^net\.fabricmc:(?:fabric-loader|intermediary):/i.test(name))
+  ) {
+    return 'fabric';
   }
 
   if (
@@ -642,6 +646,24 @@ async function findLoaderProfile({
     return b.time - a.time;
   });
   return candidates[0] || null;
+}
+
+/**
+ * Safety net for loader installers that name their profile differently than
+ * expected. Looks only at directories created during the current install and
+ * still verifies that the profile really belongs to the loader.
+ */
+async function findFreshLoaderProfile({ paths, loader, gameVersion, loaderVersion, before }) {
+  const ids = [...(await listVersionIds(paths))].filter((id) => !before?.has(id));
+  const matches = [];
+  for (const id of ids) {
+    const meta = await readJson(path.join(paths.versions, id, `${id}.json`), null);
+    if (!meta?.id) continue;
+    if (detectLoaderType(meta, id) !== loader) continue;
+    const version = loader === 'neoforge' ? extractNeoForgeVersion(meta, id, gameVersion) : null;
+    matches.push({ id, meta, version });
+  }
+  return matches.find((item) => item.version === loaderVersion) || matches[0] || null;
 }
 
 async function getForgeBuilds(gameVersion, force = false) {
@@ -985,13 +1007,21 @@ async function installNeoForgeBuild({
   });
   check();
 
-  const found = await findLoaderProfile({
-    paths,
-    loader: 'neoforge',
-    gameVersion,
-    loaderVersion: chosen.version,
-    before,
-  });
+  const found =
+    (await findLoaderProfile({
+      paths,
+      loader: 'neoforge',
+      gameVersion,
+      loaderVersion: chosen.version,
+      before,
+    })) ||
+    (await findFreshLoaderProfile({
+      paths,
+      loader: 'neoforge',
+      gameVersion,
+      loaderVersion: chosen.version,
+      before,
+    }));
   if (!found) {
     throw new Error(
       'NeoForge установился, но созданный профиль не найден. Проверьте папку versions.',
