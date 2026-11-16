@@ -25,6 +25,7 @@ const {
   getFabricLoaders,
   getFabricInfoForVersion,
   getForgeBuilds,
+  getNeoForgeBuilds,
   getOptiFineBuilds,
 } = require('./lib/mojang');
 const game = require('./lib/launcher');
@@ -361,6 +362,7 @@ function registerIpc() {
   ipcMain.handle('loader:builds', async (_event, { loader, gameVersion }) => {
     if (!gameVersion) return [];
     if (loader === 'forge') return getForgeBuilds(gameVersion);
+    if (loader === 'neoforge') return getNeoForgeBuilds(gameVersion);
     if (loader === 'optifine') return getOptiFineBuilds(gameVersion);
     if (loader === 'fabric') return getFabricLoaders(gameVersion);
     return [];
@@ -588,7 +590,7 @@ function registerIpc() {
       const validation = await game.validateInstallation(record, settings.gameDir);
       if (!validation.ok) {
         const jobId = `repair-${Date.now()}`;
-        const loader = ['fabric', 'forge', 'optifine'].includes(record.loader)
+        const loader = ['fabric', 'forge', 'neoforge', 'optifine'].includes(record.loader)
           ? record.loader
           : 'vanilla';
         const targetVersionId = record.gameVersion || record.id;

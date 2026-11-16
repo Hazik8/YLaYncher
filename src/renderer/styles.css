@@ -755,6 +755,11 @@ svg {
   border-color: rgba(255, 193, 94, 0.28);
   background: rgba(255, 193, 94, 0.08);
 }
+.tag-cyan {
+  color: var(--cyan);
+  border-color: rgba(94, 230, 255, 0.26);
+  background: rgba(94, 230, 255, 0.08);
+}
 .tag-red {
   color: var(--red);
   border-color: rgba(255, 107, 122, 0.3);
@@ -963,6 +968,7 @@ svg {
 .picker-item-dot.old { background: var(--amber); }
 .picker-item-dot.fabric { background: var(--violet); }
 .picker-item-dot.forge { background: var(--amber); }
+.picker-item-dot.neoforge { background: var(--cyan); }
 .picker-item-dot.optifine { background: var(--lime); }
 .picker-item-info {
   display: flex;
@@ -1759,6 +1765,11 @@ svg {
   border-color: rgba(255, 193, 94, 0.22);
   color: var(--amber);
 }
+.version-avatar.neoforge {
+  background: rgba(94, 230, 255, 0.12);
+  border-color: rgba(94, 230, 255, 0.22);
+  color: var(--cyan);
+}
 .version-avatar.optifine {
   background: rgba(168, 245, 106, 0.12);
   border-color: rgba(168, 245, 106, 0.22);
@@ -1896,6 +1907,10 @@ svg {
 .version-badge.fabric {
   color: var(--violet);
   background: rgba(155, 131, 255, 0.12);
+}
+.version-badge.neoforge {
+  color: var(--cyan);
+  background: rgba(94, 230, 255, 0.12);
 }
 .version-date {
   font-size: 10px;
@@ -2831,7 +2846,7 @@ select option {
 }
 .loader-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   padding: 4px;
   margin-bottom: 14px;

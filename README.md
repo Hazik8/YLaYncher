@@ -6,13 +6,14 @@
 ![Minecraft](https://img.shields.io/badge/Minecraft-Java%20Edition-a8f56a)
 ![Fabric](https://img.shields.io/badge/Fabric-supported-9b83ff)
 ![Forge](https://img.shields.io/badge/Forge-supported-ffc15e)
+![NeoForge](https://img.shields.io/badge/NeoForge-supported-5ee6ff)
 ![OptiFine](https://img.shields.io/badge/OptiFine-supported-a8f56a)
 
 ## Возможности
 
 - Установка любых версий Minecraft: Java Edition напрямую с серверов Mojang.
-- Установка модлоадеров Fabric, Forge и OptiFine с выбором версии игры и сборки.
-- Поддержка профилей с `inheritsFrom`: Forge и OptiFine используют родительский клиент Minecraft и корректно объединяют библиотеки и аргументы.
+- Установка модлоадеров Fabric, Forge, NeoForge и OptiFine с выбором версии игры и сборки.
+- Поддержка профилей с `inheritsFrom`: Forge, NeoForge и OptiFine используют родительский клиент Minecraft и корректно объединяют библиотеки и аргументы.
 - Офлайн-аккаунты с ником и стабильным UUID.
 - Вход через Microsoft для лицензионных аккаунтов: официальные серверы, скины и достижения. Сессия продлевается автоматически.
 - Меню модов: поиск и установка модов через Modrinth и CurseForge, управление установленными модами и ключ CurseForge.
@@ -29,7 +30,7 @@
 - Windows 10/11, macOS или Linux.
 - Node.js 18+ и npm.
 - Интернет для установки версий, модлоадеров и загрузки Java.
-- Java 8+ для legacy-версий и Java 17/21 для современных сборок Forge/OptiFine.
+- Java 8+ для legacy-версий и Java 17/21 для современных сборок Forge/NeoForge/OptiFine.
 
 ## Запуск
 
@@ -83,8 +84,8 @@ npm.cmd run site
 
 ## Ограничения
 
-- Поддерживаются vanilla, Fabric, Forge и OptiFine. Сторонние профили с `inheritsFrom` также отображаются, если их родительская версия и файлы доступны.
-- Для установки Forge и OptiFine используется официальный установщик, поэтому нужен интернет и подходящая Java. Установщики работают в выбранной папке игры.
+- Поддерживаются vanilla, Fabric, Forge, NeoForge и OptiFine. Сторонние профили с `inheritsFrom` также отображаются, если их родительская версия и файлы доступны.
+- Для установки Forge, NeoForge и OptiFine используется официальный установщик, поэтому нужен интернет и подходящая Java. Установщики работают в выбранной папке игры.
 - Вход через Microsoft использует OAuth 2.0 Device Code Flow. Для собственной сборки можно указать свой Azure Application ID в переменной окружения `YL_MICROSOFT_CLIENT_ID`; по умолчанию используется публичный client ID Prism Launcher.
 - Для аккаунта Microsoft нужна лицензия Minecraft: Java Edition и созданный профиль Minecraft. Детские аккаунты и аккаунты без Xbox-профиля могут требовать дополнительной настройки на сайте Microsoft/Xbox.
 - Моды устанавливаются вручную в папку `mods`. Лаунчер не является менеджером модов.
@@ -96,7 +97,7 @@ npm.cmd run site
 assets/                 иконки, шрифты и Java-помощник OptiFine
 src/main/main.js        Electron main, IPC, запуск игры
 src/main/lib/http.js    загрузки, хэши, прогресс
-src/main/lib/mojang.js  манифест, библиотеки, ресурсы, Fabric/Forge/OptiFine
+src/main/lib/mojang.js  манифест, библиотеки, ресурсы, Fabric/Forge/NeoForge/OptiFine
 src/main/lib/mods.js    Modrinth: поиск и установка модов
 src/main/lib/launcher.js аргументы Java, inherited-профили и процесс Minecraft
 src/main/lib/microsoft.js OAuth Microsoft, Xbox Live и сессия Minecraft

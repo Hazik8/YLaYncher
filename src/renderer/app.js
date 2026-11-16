@@ -100,6 +100,7 @@ function typeLabel(type) {
   if (type === 'snapshot') return 'Snapshot';
   if (type === 'fabric') return 'Fabric';
   if (type === 'forge') return 'Forge';
+  if (type === 'neoforge') return 'NeoForge';
   if (type === 'optifine') return 'OptiFine';
   if (type === 'old_beta') return 'Beta';
   if (type === 'old_alpha') return 'Alpha';
@@ -111,6 +112,7 @@ function typeClass(type) {
   if (type === 'old_beta' || type === 'old_alpha') return 'old';
   if (type === 'fabric') return 'fabric';
   if (type === 'forge') return 'forge';
+  if (type === 'neoforge') return 'neoforge';
   if (type === 'optifine') return 'optifine';
   return '';
 }
@@ -123,6 +125,7 @@ function recordType(record) {
 function loaderTag(type) {
   if (type === 'fabric') return 'tag-violet';
   if (type === 'forge') return 'tag-amber';
+  if (type === 'neoforge') return 'tag-cyan';
   if (type === 'optifine') return 'tag-lime';
   return '';
 }
@@ -132,6 +135,7 @@ function recordSub(record) {
   const game = record.gameVersion || record.id;
   if (record.loader === 'fabric') return `Fabric ${record.loaderVersion || ''} · ${game}`;
   if (record.loader === 'forge') return `Forge ${record.loaderVersion || ''} · ${game}`;
+  if (record.loader === 'neoforge') return `NeoForge ${record.loaderVersion || ''} · ${game}`;
   if (record.loader === 'optifine') {
     const version = String(record.loaderVersion || '')
       .replace(/^OptiFine_/i, '')
@@ -891,7 +895,15 @@ function renderVersionsPage() {
       .map((record) => {
         const type = recordType(record);
         const letter =
-          record.loader === 'fabric' ? 'F' : record.loader === 'forge' ? 'F' : record.loader === 'optifine' ? 'O' : '';
+          record.loader === 'fabric'
+            ? 'F'
+            : record.loader === 'forge'
+              ? 'F'
+              : record.loader === 'neoforge'
+                ? 'N'
+                : record.loader === 'optifine'
+                  ? 'O'
+                  : '';
         return `
         <article class="installed-card">
           <span class="version-avatar ${typeClass(type)}">
@@ -1460,6 +1472,7 @@ async function startInstall(versionId, loader = 'vanilla', loaderVersion) {
     updateProgressUI();
     if (loader === 'fabric') addLogLine(`[Установка] Fabric ${loaderVersion || ''} для ${versionId}`, 'launcher');
     else if (loader === 'forge') addLogLine(`[Установка] Forge ${loaderVersion || ''} для ${versionId}`, 'launcher');
+    else if (loader === 'neoforge') addLogLine(`[Установка] NeoForge ${loaderVersion || ''} для ${versionId}`, 'launcher');
     else if (loader === 'optifine') addLogLine(`[Установка] OptiFine ${loaderVersion || ''} для ${versionId}`, 'launcher');
     else addLogLine(`[Установка] Minecraft ${versionId}`, 'launcher');
     if (getSettings().showConsole) openConsole();
@@ -2300,7 +2313,7 @@ function openLoaderModal(initialLoader = 'fabric') {
     <div class="modal-head">
       <div>
         <h2>Установить модлоадер</h2>
-        <p>Fabric, Forge или OptiFine — отдельной сборкой, без изменения ванильной версии.</p>
+        <p>Fabric, Forge, NeoForge или OptiFine — отдельной сборкой, без изменения ванильной версии.</p>
       </div>
       <button class="modal-close"><svg><use href="#i-close"/></svg></button>
     </div>
@@ -2308,6 +2321,7 @@ function openLoaderModal(initialLoader = 'fabric') {
       <div class="loader-tabs" id="loader-tabs">
         <button data-loader-kind="fabric" class="${initialLoader === 'fabric' ? 'active' : ''}">Fabric</button>
         <button data-loader-kind="forge" class="${initialLoader === 'forge' ? 'active' : ''}">Forge</button>
+        <button data-loader-kind="neoforge" class="${initialLoader === 'neoforge' ? 'active' : ''}">NeoForge</button>
         <button data-loader-kind="optifine" class="${initialLoader === 'optifine' ? 'active' : ''}">OptiFine</button>
       </div>
       <div class="fabric-form">
@@ -2347,9 +2361,10 @@ function openLoaderModal(initialLoader = 'fabric') {
         const loaderName = () => typeLabel(currentLoader);
 
         const setInfo = (count, best) => {
+          const hint = currentLoader === 'neoforge' ? 'актуальная' : 'рекомендуется';
           info.innerHTML =
             count && best
-              ? `<span class="tag ${loaderTag(currentLoader)}">${loaderName()}</span> <span>${count} сборок · рекомендуется ${escapeHtml(
+              ? `<span class="tag ${loaderTag(currentLoader)}">${loaderName()}</span> <span>${count} сборок · ${hint} ${escapeHtml(
                   best,
                 )}</span>`
               : '';
@@ -2362,6 +2377,9 @@ function openLoaderModal(initialLoader = 'fabric') {
           } else if (currentLoader === 'forge') {
             note.innerHTML =
               'Forge использует официальный установщик. После установки появится отдельный профиль с поддержкой модов.';
+          } else if (currentLoader === 'neoforge') {
+            note.innerHTML =
+              'NeoForge использует официальный установщик. После установки появится отдельный профиль с поддержкой модов.';
           } else {
             note.innerHTML =
               'OptiFine устанавливается официальным установщиком в выбранную папку игры. Профиль также появится отдельно.';
@@ -2377,12 +2395,18 @@ function openLoaderModal(initialLoader = 'fabric') {
               best: loader.stable,
             }));
           }
-          if (currentLoader === 'forge') {
+          if (currentLoader === 'forge' || currentLoader === 'neoforge') {
             return items.map((build) => ({
               value: build.version,
               label: build.version,
-              note: build.recommended ? 'рекомендуемая' : build.latest ? 'последняя' : '',
-              best: build.recommended,
+              note: build.recommended
+                ? 'рекомендуемая'
+                : build.latest
+                  ? 'последняя'
+                  : build.beta
+                    ? 'beta'
+                    : '',
+              best: build.recommended || build.latest || build.stable,
             }));
           }
           return items.map((build) => ({

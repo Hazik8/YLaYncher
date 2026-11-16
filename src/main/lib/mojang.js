@@ -37,12 +37,17 @@ const FORGE_MAVEN_URL = 'https://maven.minecraftforge.net/net/minecraftforge/for
 const FORGE_PROMOTIONS_URL =
   'https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json';
 const FORGE_MAVEN_METADATA_URL = `${FORGE_MAVEN_URL}/maven-metadata.xml`;
+const NEOFORGE_MAVEN_URL = 'https://maven.neoforged.net/releases/net/neoforged/neoforge';
+const NEOFORGE_LEGACY_MAVEN_URL = 'https://maven.neoforged.net/releases/net/neoforged/forge';
+const NEOFORGE_MAVEN_METADATA_URL = `${NEOFORGE_MAVEN_URL}/maven-metadata.xml`;
+const NEOFORGE_LEGACY_MAVEN_METADATA_URL = `${NEOFORGE_LEGACY_MAVEN_URL}/maven-metadata.xml`;
 const OPTIFINE_DOWNLOADS_URL = 'https://optifine.net/downloads';
 const OPTIFINE_SITE_URL = 'https://optifine.net';
 
 const metaCache = new Map();
 const fabricLoaderCache = new Map();
 const forgeCache = new Map();
+const neoforgeCache = new Map();
 const optifineCache = new Map();
 let manifestMemory = null;
 
@@ -331,6 +336,18 @@ function naturalCompare(a, b) {
   return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
 }
 
+function parseMavenVersions(xml) {
+  return [...String(xml || '').matchAll(/<version>([^<]+)<\/version>/g)]
+    .map((match) => match[1].trim())
+    .filter(Boolean);
+}
+
+function neoForgeGamePrefix(gameVersion) {
+  const match = String(gameVersion || '').match(/^1\.(\d+)(?:\.(\d+))?$/);
+  if (!match) return null;
+  return `${Number(match[1])}.${Number(match[2] || 0)}`;
+}
+
 function detectLoaderType(meta, versionId = '') {
   const id = String(meta?.id || versionId || '');
   const mainClass = String(meta?.mainClass || '');
@@ -344,6 +361,14 @@ function detectLoaderType(meta, versionId = '') {
     names.some((name) => /^net\.fabricmc:/i.test(name))
   ) {
     return 'fabric';
+  }
+
+  if (
+    /neoforge/i.test(id) ||
+    /neoforge/i.test(mainClass) ||
+    names.some((name) => /^net\.neoforged:/i.test(name))
+  ) {
+    return 'neoforge';
   }
 
   if (
@@ -385,6 +410,25 @@ function extractForgeVersion(meta, versionId = '', gameVersion = '') {
   const suffix = gameVersion ? id.split(`${gameVersion}-`).pop() : id;
   const match = String(suffix).match(/forge-?(.+)$/i);
   if (match) return match[1].replace(/^forge-?/i, '');
+  return null;
+}
+
+function extractNeoForgeVersion(meta, versionId = '', gameVersion = '') {
+  const id = String(meta?.id || versionId || '');
+  const libraries = Array.isArray(meta?.libraries) ? meta.libraries : [];
+  for (const lib of libraries) {
+    const match = String(lib?.name || '').match(/^net\.neoforged:(?:neoforge|forge):(.+)$/i);
+    if (match) {
+      const value = match[1].replace(/:(?:universal|client|server)$/i, '');
+      if (gameVersion && value.startsWith(`${gameVersion}-`)) {
+        return value.slice(gameVersion.length + 1);
+      }
+      return value;
+    }
+  }
+  const suffix = gameVersion && id.includes(`${gameVersion}-`) ? id.split(`${gameVersion}-`).pop() : id;
+  const match = String(suffix).match(/neoforge-?(.+)$/i);
+  if (match) return match[1].replace(/^neoforge-?/i, '');
   return null;
 }
 
@@ -572,6 +616,8 @@ async function findLoaderProfile({
     let exact = false;
     if (loader === 'forge' && loaderVersion) {
       exact = extractForgeVersion(meta, id, gameVersion) === loaderVersion;
+    } else if (loader === 'neoforge' && loaderVersion) {
+      exact = extractNeoForgeVersion(meta, id, gameVersion) === loaderVersion;
     } else if (loader === 'optifine') {
       exact = optifineSuffix
         ? new RegExp(`optifine[_-]${optifineSuffix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i').test(id)
@@ -629,6 +675,69 @@ async function getForgeBuilds(gameVersion, force = false) {
 
   builds.sort((a, b) => naturalCompare(b.version, a.version));
   forgeCache.set(cacheKey, { at: Date.now(), data: builds });
+  return builds;
+}
+
+async function getNeoForgeBuilds(gameVersion, force = false) {
+  const cacheKey = `neoforge::${gameVersion}`;
+  const cached = neoforgeCache.get(cacheKey);
+  if (!force && cached && Date.now() - cached.at < 30 * 60 * 1000) return cached.data;
+
+  let fetchError = null;
+  const [modernXml, legacyXml] = await Promise.all([
+    fetchText(NEOFORGE_MAVEN_METADATA_URL).catch((error) => {
+      fetchError = fetchError || error;
+      return '';
+    }),
+    fetchText(NEOFORGE_LEGACY_MAVEN_METADATA_URL).catch((error) => {
+      fetchError = fetchError || error;
+      return '';
+    }),
+  ]);
+  const prefix = neoForgeGamePrefix(gameVersion);
+  const seen = new Set();
+  const builds = [];
+
+  const addBuild = (fullVersion, artifact, version) => {
+    if (!fullVersion || seen.has(fullVersion)) return;
+    seen.add(fullVersion);
+    const beta = /-beta(?:$|[.-])/i.test(fullVersion);
+    const baseUrl = artifact === 'forge' ? NEOFORGE_LEGACY_MAVEN_URL : NEOFORGE_MAVEN_URL;
+    builds.push({
+      loader: 'neoforge',
+      gameVersion,
+      version,
+      fullVersion,
+      artifact,
+      beta,
+      stable: !beta,
+      latest: false,
+      recommended: false,
+      installerUrl: `${baseUrl}/${fullVersion}/${artifact}-${fullVersion}-installer.jar`,
+    });
+  };
+
+  if (prefix) {
+    for (const version of parseMavenVersions(modernXml)) {
+      if (version.startsWith(`${prefix}.`)) addBuild(version, 'neoforge', version);
+    }
+  }
+  for (const version of parseMavenVersions(legacyXml)) {
+    if (!version.startsWith(`${gameVersion}-`)) continue;
+    addBuild(version, 'forge', version.slice(gameVersion.length + 1));
+  }
+
+  builds.sort((a, b) => naturalCompare(b.version, a.version));
+  if (!builds.length && fetchError) {
+    throw new Error(
+      'Не удалось загрузить список сборок NeoForge. Проверьте подключение к интернету.',
+    );
+  }
+  const latestStable = builds.find((build) => build.stable);
+  if (latestStable) latestStable.latest = true;
+  else if (builds[0]) builds[0].latest = true;
+
+  neoforgeCache.set(cacheKey, { at: Date.now(), data: builds });
   return builds;
 }
 
@@ -811,6 +920,88 @@ async function installForgeBuild({
     profileMeta: found.meta,
     loaderVersion: chosen.version,
     displayName: `Forge ${chosen.version} · ${gameVersion}`,
+  };
+}
+
+async function installNeoForgeBuild({
+  gameVersion,
+  loaderVersion,
+  gameDir,
+  paths,
+  reporter,
+  isCancelled,
+  check,
+}) {
+  const builds = await getNeoForgeBuilds(gameVersion);
+  const chosen =
+    builds.find((build) => build.version === loaderVersion || build.fullVersion === loaderVersion) ||
+    builds.find((build) => build.latest) ||
+    builds.find((build) => build.stable) ||
+    builds[0];
+  if (!chosen) {
+    throw new Error(`NeoForge не поддерживает Minecraft ${gameVersion}.`);
+  }
+  if (
+    loaderVersion &&
+    chosen.version !== loaderVersion &&
+    chosen.fullVersion !== loaderVersion
+  ) {
+    throw new Error(`Версия NeoForge ${loaderVersion} для Minecraft ${gameVersion} не найдена.`);
+  }
+
+  reporter.setStage('loader', `Подготовка NeoForge ${chosen.version}…`);
+  await installVersion({
+    versionId: gameVersion,
+    loader: 'vanilla',
+    gameDir,
+    onProgress: reporter.callback,
+    isCancelled,
+    internal: true,
+  });
+  check();
+
+  await ensureLauncherProfiles(paths.gameDir);
+  const installerFile = path.join(
+    paths.cache,
+    'installers',
+    `neoforge-${chosen.artifact}-${chosen.fullVersion}-installer.jar`,
+  );
+  reporter.setStage('loader', 'Скачивание установщика NeoForge…');
+  await downloadFile(chosen.installerUrl, installerFile, { isCancelled });
+  check();
+
+  const parentMeta = await getVersionMeta(gameVersion, { gameDir });
+  reporter.setStage('loader', `Установка NeoForge ${chosen.version}…`);
+  const javaPath = await chooseInstallerJava(parentMeta, paths, reporter, isCancelled);
+  const before = await listVersionIds(paths);
+  await runProcess(javaPath, ['-jar', installerFile, '--installClient', paths.gameDir], {
+    cwd: paths.gameDir,
+    isCancelled,
+    onLine: (line) => {
+      if (/download|install|extract|error|exception/i.test(line)) {
+        reporter.setStage('loader', `NeoForge: ${line.slice(0, 180)}`);
+      }
+    },
+  });
+  check();
+
+  const found = await findLoaderProfile({
+    paths,
+    loader: 'neoforge',
+    gameVersion,
+    loaderVersion: chosen.version,
+    before,
+  });
+  if (!found) {
+    throw new Error(
+      'NeoForge установился, но созданный профиль не найден. Проверьте папку versions.',
+    );
+  }
+  return {
+    profileId: found.id,
+    profileMeta: found.meta,
+    loaderVersion: chosen.version,
+    displayName: `NeoForge ${chosen.version} · ${gameVersion}`,
   };
 }
 
@@ -1047,6 +1238,25 @@ async function installVersion({
     record = {
       id: installed.profileId,
       loader: 'forge',
+      gameVersion: versionId,
+      loaderVersion: installed.loaderVersion,
+      displayName: installed.displayName,
+    };
+  } else if (loader === 'neoforge') {
+    const installed = await installNeoForgeBuild({
+      gameVersion: versionId,
+      loaderVersion,
+      gameDir,
+      paths,
+      reporter,
+      isCancelled,
+      check,
+    });
+    meta = await resolveVersionMeta(installed.profileId, gameDir, { force: true });
+    writeMeta = installed.profileMeta;
+    record = {
+      id: installed.profileId,
+      loader: 'neoforge',
       gameVersion: versionId,
       loaderVersion: installed.loaderVersion,
       displayName: installed.displayName,
@@ -1326,18 +1536,22 @@ async function listInstalled(gameDir) {
       marker?.loaderVersion ||
       (loader === 'forge'
         ? extractForgeVersion(raw, id, gameVersion)
-        : loader === 'optifine'
-          ? extractOptiFineVersion(raw, id)
-          : null);
+        : loader === 'neoforge'
+          ? extractNeoForgeVersion(raw, id, gameVersion)
+          : loader === 'optifine'
+            ? extractOptiFineVersion(raw, id)
+            : null);
     const displayName =
       marker?.displayName ||
       (loader === 'forge'
         ? `Forge ${loaderVersion || ''} · ${gameVersion}`.replace('  ', ' ')
-        : loader === 'optifine'
-          ? `OptiFine ${loaderVersion || ''} · ${gameVersion}`.replace('  ', ' ')
-          : loader === 'fabric'
-            ? `Fabric · ${gameVersion}`
-            : id);
+        : loader === 'neoforge'
+          ? `NeoForge ${loaderVersion || ''} · ${gameVersion}`.replace('  ', ' ')
+          : loader === 'optifine'
+            ? `OptiFine ${loaderVersion || ''} · ${gameVersion}`.replace('  ', ' ')
+            : loader === 'fabric'
+              ? `Fabric · ${gameVersion}`
+              : id);
 
     result.push({
       ...(marker || {}),
@@ -1408,6 +1622,7 @@ module.exports = {
   getFabricProfile,
   getFabricInfoForVersion,
   getForgeBuilds,
+  getNeoForgeBuilds,
   getOptiFineBuilds,
   installVersion,
   listInstalled,
